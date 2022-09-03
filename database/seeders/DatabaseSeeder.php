@@ -3,6 +3,10 @@
 namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+
+use App\Models\Comment;
+use App\Models\Rate;
+use App\Models\Reply;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -14,11 +18,18 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
-        // \App\Models\User::factory(10)->create();
+        $this->call([
+            CountriesSeeder::class,
+            RolesSeeder::class,
+            UsersSeeder::class,
+            CategoriesSeeder::class,
+            DirectorsSeeder::class,
+            ActorsSeeder::class,
+            MoviesSeeder::class,
+        ]);
 
-        // \App\Models\User::factory()->create([
-        //     'name' => 'Test User',
-        //     'email' => 'test@example.com',
-        // ]);
+        Rate::factory()->count(23)->create();
+        Comment::factory()->count(30)->create();
+        Reply::factory()->count(15)->create();
     }
 }

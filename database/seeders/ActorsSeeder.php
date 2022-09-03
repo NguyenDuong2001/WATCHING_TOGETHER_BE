@@ -2,12 +2,11 @@
 
 namespace Database\Seeders;
 
-use App\Models\Director;
+use App\Models\Actor;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use Faker\Factory as Faker;
 
-class DirectorsSeeder extends Seeder
+class ActorsSeeder extends Seeder
 {
     /**
      * Run the database seeds.
@@ -16,12 +15,12 @@ class DirectorsSeeder extends Seeder
      */
     public function run()
     {
-        $directors = Director::factory()->count(10)->create();
+        $actors = Actor::factory()->count(30)->create();
 
         fake()->addProvider(new \Smknstd\FakerPicsumImages\FakerPicsumImagesProvider(fake()));
         $imageUrl = fake()->imageUrl(200,200);
-        foreach ($directors as $director){
-            $director->addMediaFromUrl($imageUrl)->toMediaCollection('images');
+        foreach ($actors as $actor){
+            $actor->addMediaFromUrl($imageUrl)->toMediaCollection('avatar');
         };
     }
 }

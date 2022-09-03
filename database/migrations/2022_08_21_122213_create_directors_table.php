@@ -16,7 +16,6 @@ return new class extends Migration
         Schema::create('directors', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('avatar')->nullable();
             $table->string('description')->nullable();
             $table->timestamp('date_of_birth')->nullable();
             $table->foreignId('country_id')->nullable()->constrained('countries');

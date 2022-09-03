@@ -12,6 +12,5 @@ use BenSampo\Enum\Enum;
 final class MovieStatus extends Enum
 {
     const Draft = 'Draft';
-    // const OptionTwo = 1;
-    // const OptionThree = 2;
+    const Published = "Published";
 }

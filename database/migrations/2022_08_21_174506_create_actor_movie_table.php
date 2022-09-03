@@ -13,12 +13,12 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('companies', function (Blueprint $table) {
+        Schema::create('actor_movie', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->unique();;
-            $table->string('description')->nullable();
+            $table->foreignId('movie_id')->constrained('movies')->onDelete('cascade');;
+            $table->foreignId('actor_id')->constrained('actors')->onDelete('cascade');;
             $table->timestamps();
-        });
+        });  
     }
 
     /**
@@ -28,6 +28,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('companies');
+        Schema::dropIfExists('actor_movie');
     }
 };

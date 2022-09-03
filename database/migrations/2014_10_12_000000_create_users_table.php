@@ -22,7 +22,7 @@ return new class extends Migration
             $table->string('phone_number')->nullable();
             $table->timestamp('date_of_birth')->nullable();
             $table->timestamp('email_verified_at')->nullable();
-            $table->foreignId('role_id')->default(1)->constrained('roles');
+            $table->foreignId('role_id')->default(4)->constrained('roles');
             $table->foreignId('country_id')->nullable()->constrained('countries');
             $table->rememberToken();
             $table->timestamps();

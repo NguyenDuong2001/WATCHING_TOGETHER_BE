@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
-class Director extends Model implements HasMedia
+class Actor extends Model implements HasMedia
 {
     use HasFactory, InteractsWithMedia;
 
@@ -17,6 +17,11 @@ class Director extends Model implements HasMedia
         'date_of_birth',
         'country_id'
     ];
+
+    public function movies()
+    {
+        return $this->belongsToMany(Movie::class);
+    }
 
     public function registerMediaCollections(): void
     {

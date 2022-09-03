@@ -73,6 +73,12 @@ DB_PASSWORD=password
     `CREATE DATABASE finnal_project;`
 
 
+Sau khi đã hoàn thành tất cả công việc ở trên, chạy lệnh sau hệ thống tự tạo ra key trong file `.env` giúp bảo mật dự án
+
+```
+php artisan key:generate
+```
+
 Nếu là lần đầu tiên khởi chạy dự án, bạn nên chạy câu lệnh sau để tạo table và seed data cho các table đó:
 
 ```
