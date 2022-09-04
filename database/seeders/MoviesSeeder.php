@@ -26,7 +26,8 @@ class MoviesSeeder extends Seeder
             'name' => 'Red Notice',
             'year' => '2021',
             'movie_duration' => 118,
-            'view' => 1230,
+            'view' => 2304,
+            'publication_time' => '2021-11-9',
             'description' => 'Red Notice is a 2021 American action comedy film written, directed, and produced by Rawson Marshall Thurber. Dwayne Johnson, who also served as a producer, stars as an FBI agent who reluctantly teams up with a renowned art thief (Ryan Reynolds) in order to catch an even more notorious criminal (Gal Gadot). The film marks the third collaboration between Thurber and Johnson, following Central Intelligence (2016) and Skyscraper (2018).',
             'company' => 'Flynn Picture Company Seven Bucks Productions Bad Version, Inc.'
         ]);

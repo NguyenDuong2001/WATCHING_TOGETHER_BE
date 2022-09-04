@@ -22,4 +22,8 @@ class Director extends Model implements HasMedia
     {
         $this->addMediaCollection('avatar')->singleFile();
     }
+
+    public function movies(){
+        return $this->hasMany(Movie::class);
+    }
 }

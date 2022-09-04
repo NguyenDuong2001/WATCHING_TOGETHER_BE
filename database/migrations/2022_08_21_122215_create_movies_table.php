@@ -22,7 +22,7 @@ return new class extends Migration
             $table->string('company')->nullable();
             $table->boolean('is_series')->default(false);
             $table->integer('movie_duration')->nullable();
-            $table->date('publication_time')->nullable();
+            $table->date('publication_time');
             $table->longText('description')->nullable();
             $table->string('status')->default(MovieStatus::Draft);
             $table->foreignId('country_id')->nullable()->constrained('countries');

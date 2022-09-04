@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\RoleType;
 use App\Models\Role;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -17,19 +18,19 @@ class RolesSeeder extends Seeder
     {
         $roles = [
             [
-                'name' => 'Super Admin',
+                'name' => RoleType::SuperAdmin,
                 'description' => 'This person may have all rights in the website'
             ],
             [
-                'name' => 'Admin',
+                'name' => RoleType::Admin,
                 'description' => 'This person can post the movie on the website'
             ],
             [
-                'name' => 'Checker',
+                'name' => RoleType::Checker,
                 'description' => 'This person can browse movies so customers can watch'
             ],
             [
-                'name' => 'Customer',
+                'name' => RoleType::Customer,
                 'description' => 'This person is a customer using and experiencing the website'
             ]
         ];
