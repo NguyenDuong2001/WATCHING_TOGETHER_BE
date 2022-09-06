@@ -35,8 +35,8 @@ class Movie extends Model implements HasMedia
 
     protected $appends = [
         'poster',
-        // 'video',
-        // 'traller',
+        'video',
+        'traller',
         'thumbnail',
         'country',
         'director',
@@ -170,8 +170,8 @@ class Movie extends Model implements HasMedia
             return Movie::orderBy('view', 'desc')->take($limit)->get();
         }
 
-        if($option == 'trending'){
-            return Movie::all()->sortByDesc('IMDb')->take($limit);
+        if($option == 'trending'){  
+            return Movie::all()->sortByDesc('IMDb')->values()->slice(0,$limit);
         }
 
         $movies = collect([]);

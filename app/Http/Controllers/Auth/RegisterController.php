@@ -18,18 +18,21 @@ class RegisterController extends Controller
         try{
             $validator = Validator::make($request->all(), [
                 'email' => ['required', 'regex:/([a-zA-Z0-9]+)?([a-zA-Z0-9]+)\@([a-zA-Z0-9]+)([\.])([a-zA-Z0-9\.]+)/u', 'unique:App\Models\User,email'],
+                'phone_number' => ['required', 'digits:10', 'unique:App\Models\User,phone_number'],
+                'fullName' => ['required'],
                 'password' => ['required', 'max:255', Password::min(8)],
             ]);
             if ($validator->fails()) {
                 return response()->json([
                     'status_code' => 500,
-                    'message' => 'Error in Sign up',
+                    'message' => 'Data Invalid',
                     'errors' => $validator->errors(),
                 ]);
             }
 
             $user = new User;
-            $user->name = $request->input('name') ? $request->input('name') : $request->input('email');
+            $user->name = $request->input('fullName');
+            $user->phone_number = $request->input('phone_number');
             $user->email = $request->input('email');
             $user->password = Hash::make($request->input('password'));
             $user->remember_token = Str::random(10);

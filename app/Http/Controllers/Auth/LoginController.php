@@ -16,7 +16,7 @@ class LoginController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
-                'email' => ['required', 'regex:/([a-zA-Z0-9]+)?([a-zA-Z0-9]+)\@([a-zA-Z0-9]+)([\.])([a-zA-Z0-9\.]+)/u'],
+                'email_or_phone_number' => $request->login_from == 'email' ? ['required', 'regex:/([a-zA-Z0-9]+)?([a-zA-Z0-9]+)\@([a-zA-Z0-9]+)([\.])([a-zA-Z0-9\.]+)/u'] : ['required', 'digits:10'],
                 'password' => ['required'],
             ]);
             if ($validator->fails()) {
@@ -27,16 +27,18 @@ class LoginController extends Controller
                 ]);
             }
 
-            $credentials = request(['email', 'password']);
 
-            if (!Auth::attempt($credentials)) {
+            if (!Auth::attempt([
+                $request->login_from => $request->email_or_phone_number, 
+                'password'=> $request->password
+                ])) {
                 return response()->json([
                     'status_code' => 500,
                     'message' => 'Email or password is incorrect'
                 ]);
             }
 
-            $user = User::where('email', $request->email)->first();
+            $user = User::where('email', $request->email_or_phone_number)->orWhere('phone_number', $request->email_or_phone_number)->first();
 
             if (!Hash::check($request->password, $user->password, [])) {
                 throw new \Exception('Error in Login');
@@ -50,11 +52,9 @@ class LoginController extends Controller
                 'token' => 'Bearer '.$tokenResult,
             ]);
         } catch (\Exception $error) {
-            Log::error($error);
-
             return response()->json([
                 'status_code' => 500,
-                'message' => 'Error in Login',
+                'message' => 'Email or password is incorrect',
             ]);
         }
     }

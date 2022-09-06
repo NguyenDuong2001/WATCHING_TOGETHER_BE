@@ -26,5 +26,3 @@ Route::post('/sign-in', [LoginController::class, 'store']);
 Route::post('/sign-up', [RegisterController::class, 'store']);
 
 Route::get('/movies/{option}', [MovieController::class, 'index']);
-
-
