@@ -24,7 +24,7 @@ class LoginController extends Controller
                     'status_code' => 500,
                     'message' => 'Email or password is invalid',
                     'errors' => $validator->errors(),
-                ]);
+                ], 500);
             }
 
 
@@ -35,7 +35,7 @@ class LoginController extends Controller
                 return response()->json([
                     'status_code' => 500,
                     'message' => 'Email or password is incorrect'
-                ]);
+                ], 500);
             }
 
             $user = User::where('email', $request->email_or_phone_number)->orWhere('phone_number', $request->email_or_phone_number)->first();
@@ -55,7 +55,7 @@ class LoginController extends Controller
             return response()->json([
                 'status_code' => 500,
                 'message' => 'Email or password is incorrect',
-            ]);
+            ], 500);
         }
     }
 
