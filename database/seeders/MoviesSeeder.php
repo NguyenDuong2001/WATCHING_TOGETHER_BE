@@ -43,7 +43,6 @@ class MoviesSeeder extends Seeder
         $movie[0]->addMediaFromUrl('https://cdn06.pramborsfm.com/storage/app/media/Prambors/Editorial/red%20notice-20211115192124.jpg?tr=w-800')->toMediaCollection('thumbnail');
 
         $movies = Movie::factory()->count(40)->create();
-
         foreach ($movies as $movie){
             $movie->actors()->attach(
                 $actors->random(rand(2,5))->pluck('id')->toArray()
@@ -52,9 +51,9 @@ class MoviesSeeder extends Seeder
                 $categories->random(rand(1,3))->pluck('id')->toArray()
             );
 
-            $movie->addMediaFromUrl(fake()->imageUrl(1200,700))->toMediaCollection('poster');
-            $movie->addMediaFromUrl(fake()->imageUrl(1200,700))->toMediaCollection('poster');
-            $movie->addMediaFromUrl(fake()->imageUrl(800,450))->toMediaCollection('thumbnail');
+            $movie->addMediaFromUrl(fake()->imageUrl(1920,1080))->toMediaCollection('poster');
+            $movie->addMediaFromUrl(fake()->imageUrl(1920,1080))->toMediaCollection('poster');
+            $movie->addMediaFromUrl(fake()->imageUrl(500,400))->toMediaCollection('thumbnail');
         }
     }
 }

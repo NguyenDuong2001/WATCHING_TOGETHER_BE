@@ -25,6 +25,7 @@ class UserFactory extends Factory
             'date_of_birth' => fake()->date('Y_m_d'),
             'country_id' => fake()->numberBetween(1, 10),
             'email_verified_at' => now(),
+            'address' => fake()->sentence(10),
             'password' => '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password
             'remember_token' => Str::random(10),
         ];

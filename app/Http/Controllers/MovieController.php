@@ -15,9 +15,8 @@ class MovieController extends Controller
     public function index(Request $request, $option)
     {
         return response()->json([
-            'status_code' => 200,
             'movies' => Movie::options($option, $request->limit),
-        ]);
+        ],200);
     }
 
     /**

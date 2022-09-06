@@ -21,7 +21,6 @@ class LoginController extends Controller
             ]);
             if ($validator->fails()) {
                 return response()->json([
-                    'status_code' => 500,
                     'message' => 'Email or password is invalid',
                     'errors' => $validator->errors(),
                 ], 500);
@@ -33,7 +32,6 @@ class LoginController extends Controller
                 'password'=> $request->password
                 ])) {
                 return response()->json([
-                    'status_code' => 500,
                     'message' => 'Email or password is incorrect'
                 ], 500);
             }
@@ -48,12 +46,10 @@ class LoginController extends Controller
             $tokenResult = $user->createToken('authToken')->plainTextToken;
 
             return response()->json([
-                'status_code' => 200,
                 'token' => 'Bearer '.$tokenResult,
-            ]);
+            ],200);
         } catch (\Exception $error) {
             return response()->json([
-                'status_code' => 500,
                 'message' => 'Email or password is incorrect',
             ], 500);
         }
@@ -64,7 +60,7 @@ class LoginController extends Controller
         $request->user()->tokens()->delete();
 
         return response()->json([
-            'status_code' => 200,
-        ]);
+            'message' => 'Log out successfully',
+        ], 200);
     }
 }

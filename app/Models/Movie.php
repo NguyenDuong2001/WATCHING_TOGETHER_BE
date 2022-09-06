@@ -52,7 +52,7 @@ class Movie extends Model implements HasMedia
         $posters = $this->getMedia('poster');
         if ($posters->count()){
             foreach ($posters as $poster){
-                $listPosters->push($poster->original_url);
+                $listPosters->push($poster->getFullUrl());
             }
         }
         return $listPosters;
@@ -65,7 +65,7 @@ class Movie extends Model implements HasMedia
         $videos = $this->getMedia('video');
         if ($videos->count()){
             foreach ($videos as $video){
-                $listVideos->push($video->original_url);
+                $listVideos->push($video->getFullUrl());
             }
         }
         return $listVideos;
@@ -78,7 +78,7 @@ class Movie extends Model implements HasMedia
         $trallers = $this->getMedia('traller');
         if ($trallers->count()){
             foreach ($trallers as $traller){
-                $listTrallers->push($traller->original_url);
+                $listTrallers->push($traller->getFullUrl());
             }
         }
         return $listTrallers;
@@ -91,7 +91,7 @@ class Movie extends Model implements HasMedia
         $thumbnails = $this->getMedia('thumbnail');
         if ($thumbnails->count()){
             foreach ($thumbnails as $thumbnail){
-                $listThumbnails->push($thumbnail->original_url);
+                $listThumbnails->push($thumbnail->getFullUrl());
             }
         }
         return $listThumbnails;

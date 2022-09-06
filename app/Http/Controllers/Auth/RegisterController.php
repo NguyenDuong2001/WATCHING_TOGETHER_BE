@@ -21,6 +21,7 @@ class RegisterController extends Controller
                 'phone_number' => ['required', 'digits:10', 'unique:App\Models\User,phone_number'],
                 'fullName' => ['required'],
                 'password' => ['required', 'max:255', Password::min(8)],
+                'address' => ['required','max:255'],
             ]);
             if ($validator->fails()) {
                 return response()->json([
@@ -34,6 +35,7 @@ class RegisterController extends Controller
             $user->name = $request->input('fullName');
             $user->phone_number = $request->input('phone_number');
             $user->email = $request->input('email');
+            $user->address = $request->input('address');
             $user->password = Hash::make($request->input('password'));
             $user->remember_token = Str::random(10);
             $user->save();
@@ -43,16 +45,14 @@ class RegisterController extends Controller
             $user->addMediaFromUrl($imageUrl)->toMediaCollection('avatar');
 
             return response()->json([
-            'status_code' => 200,
             'token' => 'Bearer '.$user->createToken('authToken')->plainTextToken,
-            ]);
+            ], 200);
         }catch (\Exception $error) {
             Log::error($error);
 
             return response()->json([
-                'status_code' => 500,
                 'message' => 'Error in Sign up',
-            ]);
+            ], 500);
         }
     }
 }
