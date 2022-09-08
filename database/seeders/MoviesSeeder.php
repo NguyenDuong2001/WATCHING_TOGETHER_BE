@@ -17,8 +17,6 @@ class MoviesSeeder extends Seeder
      */
     public function run()
     {
-        fake()->addProvider(new \Smknstd\FakerPicsumImages\FakerPicsumImagesProvider(fake()));
-
         $categories = Category::all();
         $actors = Actor::all();
 
@@ -51,9 +49,9 @@ class MoviesSeeder extends Seeder
                 $categories->random(rand(1,3))->pluck('id')->toArray()
             );
 
-            $movie->addMediaFromUrl(fake()->imageUrl(1920,1080))->toMediaCollection('poster');
-            $movie->addMediaFromUrl(fake()->imageUrl(1920,1080))->toMediaCollection('poster');
-            $movie->addMediaFromUrl(fake()->imageUrl(500,400))->toMediaCollection('thumbnail');
+            // $movie->addMediaFromUrl("https://source.unsplash.com/random/1920x1080")->toMediaCollection('poster');
+            // $movie->addMediaFromUrl("https://source.unsplash.com/random/1920x1080")->toMediaCollection('poster');
+            // $movie->addMediaFromUrl("https://source.unsplash.com/random/500x450")->toMediaCollection('thumbnail');
         }
     }
 }

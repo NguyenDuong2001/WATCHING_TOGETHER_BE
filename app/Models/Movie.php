@@ -3,11 +3,13 @@
 namespace App\Models;
 
 use App\Enums\MovieStatus;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
+
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Movie extends Model implements HasMedia
 {
@@ -15,33 +17,33 @@ class Movie extends Model implements HasMedia
 
     protected $fillable = [
         'name',
-        'movie_duration',
-        'publication_time',
         'view',
-        'description',
-        'is_series',
-        'status',
         'year',
+        'status',
+        'company',
+        'is_series',
         'country_id',
         'director_id',
-        'company'
+        'description',
+        'movie_duration',
+        'publication_time',
     ];
 
     protected $hidden = [
+        'media',
         'country_id',
         'director_id',
-        'media'
     ];
 
     protected $appends = [
         'poster',
         'video',
-        'traller',
-        'thumbnail',
-        'country',
-        'director',
         'actor',
+        'country',
+        'traller',
+        'director',
         'category',
+        'thumbnail',
         // 'IMDb'
     ];
 
@@ -50,11 +52,17 @@ class Movie extends Model implements HasMedia
         $listPosters = collect([]);
 
         $posters = $this->getMedia('poster');
-        if ($posters->count()){
-            foreach ($posters as $poster){
-                $listPosters->push($poster->getFullUrl());
-            }
+        if ($posters->count() <= 0){
+            return [
+                "https://picsum.photos/1920/1080", 
+                "https://picsum.photos/1920/1080"
+            ];
         }
+        
+        foreach ($posters as $poster){
+            $listPosters->push($poster->getFullUrl());
+        }
+
         return $listPosters;
     }
 
@@ -68,6 +76,7 @@ class Movie extends Model implements HasMedia
                 $listVideos->push($video->getFullUrl());
             }
         }
+
         return $listVideos;
     }
 
@@ -81,6 +90,7 @@ class Movie extends Model implements HasMedia
                 $listTrallers->push($traller->getFullUrl());
             }
         }
+
         return $listTrallers;
     }
 
@@ -89,11 +99,14 @@ class Movie extends Model implements HasMedia
         $listThumbnails = collect([]);
 
         $thumbnails = $this->getMedia('thumbnail');
-        if ($thumbnails->count()){
-            foreach ($thumbnails as $thumbnail){
-                $listThumbnails->push($thumbnail->getFullUrl());
-            }
+        if ($thumbnails->count() <= 0){
+            return ["https://picsum.photos/500/400"];
         }
+
+        foreach ($thumbnails as $thumbnail){
+            $listThumbnails->push($thumbnail->getFullUrl());
+        }
+
         return $listThumbnails;
     }
 
@@ -160,29 +173,43 @@ class Movie extends Model implements HasMedia
         $this->addMediaCollection('thumbnail')->singleFile();
     }
 
-    public static function options($option, $limit = 20)
+    public static function options($option, $limit = 20, $category, $country)
     {
+        $query = Movie::where(function($query) use ($category, $country) {
+            if ($category){
+                $query->whereHas('categories', function($q) use ($category) {
+                    $q->where('categories.id','=', $category);
+                });
+            }
+
+            if ($country){
+                    $query->where('country_id', $country);
+            }
+
+            return $query;
+        });
+
         if($option == 'new'){
-            return Movie::orderBy('publication_time', 'desc')->take($limit)->get();
+            return $query->orderBy('publication_time', 'desc')->take($limit)->get();
         }
 
         if($option == 'popular'){
-            return Movie::orderBy('view', 'desc')->take($limit)->get();
+            return $query->orderBy('view', 'desc')->take($limit)->get();
         }
 
         if($option == 'trending'){  
-            return Movie::all()->sortByDesc('IMDb')->values()->slice(0,$limit);
+            return $query->get()->sortByDesc('IMDb')->values()->slice(0,$limit);
         }
 
         $movies = collect([]);
 
-        $most_view = Movie::orderBy('view', 'desc')->first();
+        $most_view = $query->orderBy('view', 'desc')->first();
         $movies->push($most_view);
 
-        $most_publication_time = Movie::whereNotIn('id', [$most_view->id])->orderBy('publication_time', 'desc')->first();
+        $most_publication_time = $query->whereNotIn('id', [$most_view->id])->orderBy('publication_time', 'desc')->first();
         $movies->push($most_publication_time);
 
-        $movies->push(Movie::whereNotIn('id', [$most_view->id, $most_publication_time->id])->get()->sortByDesc('IMDb')->first());
+        $movies->push($query->whereNotIn('id', [$most_view->id, $most_publication_time->id])->get()->sortByDesc('IMDb')->first());
 
         return $movies;
     }

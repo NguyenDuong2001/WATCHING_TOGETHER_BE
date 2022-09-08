@@ -38,10 +38,8 @@ class UsersSeeder extends Seeder
 
         $users = User::factory()->count(10)->create();
 
-        fake()->addProvider(new \Smknstd\FakerPicsumImages\FakerPicsumImagesProvider(fake()));
-        $imageUrl = fake()->imageUrl(200,200);
-        foreach ($users as $user){
-            $user->addMediaFromUrl($imageUrl)->toMediaCollection('avatar');
-        };
+        // foreach ($users as $user){
+        //     $user->addMediaFromUrl("https://source.unsplash.com/random/180x180")->toMediaCollection('avatar');
+        // };
     }
 }

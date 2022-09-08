@@ -19,14 +19,15 @@ return new class extends Migration
             $table->integer('year');
             $table->integer('view');
             $table->string('name')->unique();
+            $table->date('publication_time');
             $table->string('company')->nullable();
+            $table->json('url_video')->nullable();
+            $table->longText('description')->nullable();
             $table->boolean('is_series')->default(false);
             $table->integer('movie_duration')->nullable();
-            $table->date('publication_time');
-            $table->longText('description')->nullable();
             $table->string('status')->default(MovieStatus::Draft);
-            $table->foreignId('country_id')->nullable()->constrained('countries');
             $table->foreignId('director_id')->constrained('directors');
+            $table->foreignId('country_id')->nullable()->constrained('countries');
             $table->timestamps();
         });
     }

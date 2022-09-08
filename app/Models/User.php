@@ -22,12 +22,13 @@ class User extends Authenticatable implements HasMedia
     protected $fillable = [
         'name',
         'email',
+        'role_id',
+        'address',
         'password',
+        'limit_age',
+        'country_id',
         'phone_number',
         'date_of_birth',
-        'role_id',
-        'country_id',
-        'address'
     ];
 
     /**
@@ -36,9 +37,35 @@ class User extends Authenticatable implements HasMedia
      * @var array<int, string>
      */
     protected $hidden = [
+        'media',
+        'role_id',
         'password',
+        'country_id',
         'remember_token',
     ];
+
+    protected $appends = [
+        'role',
+        'avatar',
+        'country',
+    ];
+
+    public function getAvatarAttribute()
+    {
+        $listAvatars = collect([]);
+
+        $avatars = $this->getMedia('avatar');
+
+        if ($avatars->count() <= 0){
+            return ["https://robohash.org/".rand(1,1000)];
+        }
+
+        foreach ($avatars as $avatar){
+            $listAvatars->push($avatar->getFullUrl());
+        }
+
+        return $listAvatars;
+    }
 
     /**
      * The attributes that should be cast.
@@ -52,5 +79,24 @@ class User extends Authenticatable implements HasMedia
     public function registerMediaCollections(): void
     {
         $this->addMediaCollection('avatar')->singleFile();
+    }
+
+    public function role(){
+        return $this->belongsTo(Role::class);
+    }
+
+    public function country()
+    {
+        return $this->belongsTo(Country::class);
+    }
+
+    public function getCountryAttribute()
+    {
+        return $this->country()->first();
+    }
+
+    public function getRoleAttribute()
+    {
+        return $this->role()->first();
     }
 }

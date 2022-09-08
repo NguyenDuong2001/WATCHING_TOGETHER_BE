@@ -44,7 +44,7 @@ class LoginController extends Controller
 
             $user->tokens()->delete();
             $tokenResult = $user->createToken('authToken')->plainTextToken;
-
+            
             return response()->json([
                 'token' => 'Bearer '.$tokenResult,
             ],200);

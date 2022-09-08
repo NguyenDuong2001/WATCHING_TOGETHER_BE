@@ -2,10 +2,11 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Actor extends Model implements HasMedia
 {
@@ -13,10 +14,36 @@ class Actor extends Model implements HasMedia
 
     protected $fillable = [
         'name',
+        'country_id',
         'description',
         'date_of_birth',
-        'country_id'
     ];
+
+    protected $hidden=[
+        'media',
+        'pivot',
+    ];
+
+    protected $appends = [
+        'avatar'
+    ];
+
+    public function getAvatarAttribute()
+    {
+        $listAvatars = collect([]);
+
+        $avatars = $this->getMedia('avatar');
+
+        if ($avatars->count() <= 0){
+            return ["https://robohash.org/".rand(1,1000)];
+        }
+
+        foreach ($avatars as $avatar){
+            $listAvatars->push($avatar->getFullUrl());
+        }
+
+        return $listAvatars;
+    }
 
     public function movies()
     {

@@ -5,6 +5,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\MovieController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\CategoryController;
+use App\Models\Movie;
 
 /*
 |--------------------------------------------------------------------------
@@ -24,5 +26,8 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::post('/sign-in', [LoginController::class, 'store']);
 
 Route::post('/sign-up', [RegisterController::class, 'store']);
-
+//->can('viewAny',[Movie::class])
 Route::get('/movies/{option}', [MovieController::class, 'index']);
+
+Route::get('/categories', [CategoryController::class, 'index']);
+

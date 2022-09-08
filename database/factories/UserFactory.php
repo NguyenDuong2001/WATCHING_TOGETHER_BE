@@ -18,6 +18,9 @@ class UserFactory extends Factory
      */
     public function definition()
     {
+        $limit_age = array(3, 6, 12, 16, 18);
+        $key = array_rand($limit_age);
+
         return [
             'name' => fake()->name(),
             'email' => fake()->safeEmail(),
@@ -25,6 +28,7 @@ class UserFactory extends Factory
             'date_of_birth' => fake()->date('Y_m_d'),
             'country_id' => fake()->numberBetween(1, 10),
             'email_verified_at' => now(),
+            'limit_age' => (int)$limit_age[$key],
             'address' => fake()->sentence(10),
             'password' => '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password
             'remember_token' => Str::random(10),

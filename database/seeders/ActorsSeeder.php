@@ -3,8 +3,8 @@
 namespace Database\Seeders;
 
 use App\Models\Actor;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
 class ActorsSeeder extends Seeder
 {
@@ -17,10 +17,8 @@ class ActorsSeeder extends Seeder
     {
         $actors = Actor::factory()->count(30)->create();
 
-        fake()->addProvider(new \Smknstd\FakerPicsumImages\FakerPicsumImagesProvider(fake()));
-        $imageUrl = fake()->imageUrl(200,200);
-        foreach ($actors as $actor){
-            $actor->addMediaFromUrl($imageUrl)->toMediaCollection('avatar');
-        };
+        // foreach ($actors as $actor){
+        //     $actor->addMediaFromUrl("https://source.unsplash.com/random/500x500")->toMediaCollection('avatar');
+        // };
     }
 }
