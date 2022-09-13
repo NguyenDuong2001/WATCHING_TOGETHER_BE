@@ -22,6 +22,7 @@ class Movie extends Model implements HasMedia
         'status',
         'company',
         'is_series',
+        'limit_age',
         'country_id',
         'director_id',
         'description',
@@ -40,7 +41,7 @@ class Movie extends Model implements HasMedia
         'video',
         'actor',
         'country',
-        'traller',
+        'trailer',
         'director',
         'category',
         'thumbnail',
@@ -54,11 +55,11 @@ class Movie extends Model implements HasMedia
         $posters = $this->getMedia('poster');
         if ($posters->count() <= 0){
             return [
-                "https://picsum.photos/1920/1080", 
-                "https://picsum.photos/1920/1080"
+                "https://picsum.photos/id/".rand(1,100)."/1920/1080",
+                "https://picsum.photos/id/".rand(1,100)."/1920/1080"
             ];
         }
-        
+
         foreach ($posters as $poster){
             $listPosters->push($poster->getFullUrl());
         }
@@ -80,18 +81,18 @@ class Movie extends Model implements HasMedia
         return $listVideos;
     }
 
-    public function getTrallerAttribute()
+    public function getTrailerAttribute()
     {
-        $listTrallers = collect([]);
+        $listTrailers = collect([]);
 
-        $trallers = $this->getMedia('traller');
-        if ($trallers->count()){
-            foreach ($trallers as $traller){
-                $listTrallers->push($traller->getFullUrl());
+        $trailers = $this->getMedia('trailer');
+        if ($trailers->count()){
+            foreach ($trailers as $trailer){
+                $listTrailers->push($trailer->getFullUrl());
             }
         }
 
-        return $listTrallers;
+        return $listTrailers;
     }
 
     public function getThumbnailAttribute()
@@ -100,7 +101,7 @@ class Movie extends Model implements HasMedia
 
         $thumbnails = $this->getMedia('thumbnail');
         if ($thumbnails->count() <= 0){
-            return ["https://picsum.photos/500/400"];
+            return ["https://picsum.photos/id/".rand(1,100)."/500/400"];
         }
 
         foreach ($thumbnails as $thumbnail){
@@ -169,7 +170,7 @@ class Movie extends Model implements HasMedia
     {
         $this->addMediaCollection('poster');
         $this->addMediaCollection('video');
-        $this->addMediaCollection('traller');
+        $this->addMediaCollection('trailer');
         $this->addMediaCollection('thumbnail')->singleFile();
     }
 
@@ -197,7 +198,7 @@ class Movie extends Model implements HasMedia
             return $query->orderBy('view', 'desc')->take($limit)->get();
         }
 
-        if($option == 'trending'){  
+        if($option == 'trending'){
             return $query->get()->sortByDesc('IMDb')->values()->slice(0,$limit);
         }
 

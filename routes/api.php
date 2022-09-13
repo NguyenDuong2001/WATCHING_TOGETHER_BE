@@ -6,6 +6,7 @@ use App\Http\Controllers\MovieController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\UserController;
 use App\Models\Movie;
 
 /*
@@ -30,4 +31,7 @@ Route::post('/sign-up', [RegisterController::class, 'store']);
 Route::get('/movies/{option}', [MovieController::class, 'index']);
 
 Route::get('/categories', [CategoryController::class, 'index']);
+
+Route::post("/users", [UserController::class, 'store']);
+Route::put("/users", [UserController::class, 'update']);
 

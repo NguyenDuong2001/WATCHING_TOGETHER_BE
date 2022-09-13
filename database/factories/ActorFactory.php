@@ -20,7 +20,7 @@ class ActorFactory extends Factory
             'name' => fake()->userName(),
             'description' => fake()->text(150),
             'date_of_birth' => fake()->date('Y_m_d'),
-            'country_id' => fake()->numberBetween(1, 10)
+            'country_id' => fake()->numberBetween(1, 30)
         ];
     }
 }

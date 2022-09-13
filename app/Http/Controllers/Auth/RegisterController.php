@@ -17,11 +17,11 @@ class RegisterController extends Controller
     {
         try{
             $validator = Validator::make($request->all(), [
-                'email' => ['required', 'regex:/([a-zA-Z0-9]+)?([a-zA-Z0-9]+)\@([a-zA-Z0-9]+)([\.])([a-zA-Z0-9\.]+)/u', 'unique:App\Models\User,email'],
-                'phone_number' => ['required', 'digits:10', 'unique:App\Models\User,phone_number'],
                 'fullName' => ['required'],
-                'password' => ['required', 'max:255', Password::min(8)],
                 'address' => ['required','max:255'],
+                'password' => ['required', 'max:255', Password::min(8)],
+                'phone_number' => ['required', 'digits:10', 'unique:App\Models\User,phone_number'],
+                'email' => ['required', 'regex:/([a-zA-Z0-9]+)?([a-zA-Z0-9]+)\@([a-zA-Z0-9]+)([\.])([a-zA-Z0-9\.]+)/u', 'unique:App\Models\User,email'],
             ]);
             if ($validator->fails()) {
                 return response()->json([
@@ -31,18 +31,16 @@ class RegisterController extends Controller
                 ]);
             }
 
-            $user = new User;
-            $user->name = $request->input('fullName');
-            $user->phone_number = $request->input('phone_number');
-            $user->email = $request->input('email');
-            $user->address = $request->input('address');
-            $user->password = Hash::make($request->input('password'));
-            $user->remember_token = Str::random(10);
-            $user->save();
+            $user = User::create([
+                "name" => $request->input('name'),
+                "email" => $request->input('email'),
+                "remember_token" => Str::random(10),
+                "address" => $request->input('address'),
+                "phone_number" => $request->input('phone_number'),
+                "password" => Hash::make($request->input('password')),
+            ]);
 
-            fake()->addProvider(new \Smknstd\FakerPicsumImages\FakerPicsumImagesProvider(fake()));
-            $imageUrl = fake()->imageUrl(200,200);
-            $user->addMediaFromUrl($imageUrl)->toMediaCollection('avatar');
+//           $user->addMediaFromUrl("https://robohash.org/".rand(1,1000))->toMediaCollection('avatar');
 
             return response()->json([
             'token' => 'Bearer '.$user->createToken('authToken')->plainTextToken,

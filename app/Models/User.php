@@ -25,7 +25,6 @@ class User extends Authenticatable implements HasMedia
         'role_id',
         'address',
         'password',
-        'limit_age',
         'country_id',
         'phone_number',
         'date_of_birth',
@@ -67,6 +66,16 @@ class User extends Authenticatable implements HasMedia
         return $listAvatars;
     }
 
+    public function getCountryAttribute()
+    {
+        return $this->country()->first();
+    }
+
+    public function getRoleAttribute()
+    {
+        return $this->role()->first();
+    }
+
     /**
      * The attributes that should be cast.
      *
@@ -88,15 +97,5 @@ class User extends Authenticatable implements HasMedia
     public function country()
     {
         return $this->belongsTo(Country::class);
-    }
-
-    public function getCountryAttribute()
-    {
-        return $this->country()->first();
-    }
-
-    public function getRoleAttribute()
-    {
-        return $this->role()->first();
     }
 }

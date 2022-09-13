@@ -22,6 +22,7 @@ return new class extends Migration
             $table->date('publication_time');
             $table->string('company')->nullable();
             $table->json('url_video')->nullable();
+            $table->integer('limit_age')->nullable();
             $table->longText('description')->nullable();
             $table->boolean('is_series')->default(false);
             $table->integer('movie_duration')->nullable();
