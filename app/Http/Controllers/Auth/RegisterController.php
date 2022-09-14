@@ -32,7 +32,7 @@ class RegisterController extends Controller
             }
 
             $user = User::create([
-                "name" => $request->input('name'),
+                "name" => $request->input('fullName'),
                 "email" => $request->input('email'),
                 "remember_token" => Str::random(10),
                 "address" => $request->input('address'),
