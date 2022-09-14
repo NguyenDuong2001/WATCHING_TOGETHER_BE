@@ -46,10 +46,9 @@ class RegisterController extends Controller
             'token' => 'Bearer '.$user->createToken('authToken')->plainTextToken,
             ], 200);
         }catch (\Exception $error) {
-            Log::error($error);
-
             return response()->json([
                 'message' => 'Error in Sign up',
+                'errors' => $error,
             ], 500);
         }
     }
