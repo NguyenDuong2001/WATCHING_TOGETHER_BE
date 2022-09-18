@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\RoleType;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
@@ -41,7 +44,7 @@ class UserController extends Controller
     {
         try{
             $validator = Validator::make($request->all(), [
-                'name' => ['required'],
+                'name' => ['required', 'max:50'],
                 'address' => ['required','max:255'],
                 'role_id' => ['exists:roles,id', 'required'],
                 'country_id' => ['exists:countries,id', 'nullable'],
@@ -118,24 +121,67 @@ class UserController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @param  \App\Models\User  $user
      * @return \Illuminate\Http\Response
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function update(Request $request, User $user)
+    public function update(Request $request, $id = null)
     {
-        $validator = Validator::make($request->all(), [
-            'address' => ['nullable','max:255'],
-            'role_id' => ['exists:roles,id', 'nullable'],
-            'country_id' => ['exists:countries,id', 'nullable'],
-            'password' => ['nullable', 'max:255', Password::min(8)],
-            'avatar' => ['mimes:jpeg,jpg,png,gif', 'nullable','max:10000'],
-            'date_of_birth' => ['date_format:Y-m-d','before:today','nullable'],
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'status_code' => 500,
-                'message' => 'Data Invalid',
-                'errors' => $validator->errors(),
+        //_method=PUT
+        try{
+            $validator = Validator::make($request->all(), [
+                'name' => ['max:50','nullable'],
+                'address' => ['nullable','max:255'],
+                'role_id' => ['exists:roles,id', 'nullable'],
+                'country_id' => ['exists:countries,id', 'nullable'],
+                'password' => ['nullable', 'max:255', Password::min(8)],
+                'avatar' => ['mimes:jpeg,jpg,png,gif', 'nullable','max:10000'],
+                'date_of_birth' => ['date_format:Y-m-d','before:today','nullable'],
             ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'status_code' => 500,
+                    'message' => 'Data Invalid',
+                    'errors' => $validator->errors(),
+                ]);
+            }
+            $user = User::findOrFail($id ? $id : Auth::user()->id);
+            if (!$request->user()->can('update',$user)){
+                return response()->json([
+                    'message' => 'Can not update',
+                ], 403);
+            }
+
+            if (Auth::user()->role->name === RoleType::SuperAdmin && $request->input('role_id')){
+                $user->role_id = $request->input('role_id');
+                $user->save();
+
+                return response()->json([
+                    'message' => 'Update successfully!',
+                    'user' => $user
+                ], 200);
+            }
+
+            $user->name = $request->input('name') ? $request->input('name') : $user->name;
+            $user->address = $request->input('address') ? $request->input('address') : $user->address;
+            $user->country_id = $request->input('country_id') ? $request->input('country_id') : $user->country_id;
+            $user->password = $request->input('password') ? Hash::make($request->input('password')) : $user->password;
+            $user->date_of_birth = $request->input('date_of_birth') ? $request->input('date_of_birth') : $user->date_of_birth;
+            $user->save();
+
+            if ($request->hasFile('avatar')){
+                $user->addMediaFromRequest('avatar')->toMediaCollection('avatar');
+            }
+
+            return response()->json([
+                'message' => 'Update successfully!',
+                'user' => $user
+            ], 200);
+
+        }catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Not found user',
+                'error' => $e
+            ], 500);
         }
     }
 
@@ -145,8 +191,26 @@ class UserController extends Controller
      * @param  \App\Models\User  $user
      * @return \Illuminate\Http\Response
      */
-    public function destroy(User $user)
+    public function destroy(Request $request, User $user, $id)
     {
-        //
+        try {
+            if (!$request->user()->can('delete', $user)){
+                return response()->json([
+                    'message' => 'Can not delete',
+                ], 403);
+            }
+
+            User::findOrFail($id)->delete();
+
+            return response()->json([
+                'message' => 'Delete successfully!',
+                'id' => $id
+            ], 200);
+        }catch (\Exception $exception){
+            return response()->json([
+                'message' => 'Not found user',
+                'error' => $exception
+            ], 500);
+        }
     }
 }

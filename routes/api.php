@@ -36,5 +36,13 @@ Route::get('/categories', [CategoryController::class, 'index']);
 Route::get('/countries', [CountryController::class, 'index']);
 
 Route::post("/users", [UserController::class, 'store']);
-Route::put("/users", [UserController::class, 'update']);
+Route::middleware('auth:sanctum')->put("/users/{id?}", [UserController::class, 'update'])->whereNumber('id');
+Route::middleware('auth:sanctum')->delete("/users/{id}", [UserController::class, 'destroy'])->whereNumber('id');
+
+
+Route::fallback(function(){
+    return response()->json([
+        'message' => 'Page Not Found'
+    ], 404);
+});
 
