@@ -17,9 +17,13 @@ class UserPolicy
      * @param  \App\Models\User  $user
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function viewAny(User $user)
+    public function viewAny(User $user, $a)
     {
-        //
+        if ($user->role->name === RoleType::SuperAdmin) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -42,7 +46,11 @@ class UserPolicy
      */
     public function create(User $user)
     {
-        //
+        if ($user->role->name === RoleType::SuperAdmin) {
+            return true;
+        }
+
+        return false;
     }
 
     /**

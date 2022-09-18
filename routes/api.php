@@ -35,7 +35,8 @@ Route::get('/movies/{option}', [MovieController::class, 'index']);
 Route::get('/categories', [CategoryController::class, 'index']);
 Route::get('/countries', [CountryController::class, 'index']);
 
-Route::post("/users", [UserController::class, 'store']);
+Route::middleware('auth:sanctum')->get("/users", [UserController::class, 'index']);
+Route::middleware('auth:sanctum')->post("/users", [UserController::class, 'store']);
 Route::middleware('auth:sanctum')->put("/users/{id?}", [UserController::class, 'update'])->whereNumber('id');
 Route::middleware('auth:sanctum')->delete("/users/{id}", [UserController::class, 'destroy'])->whereNumber('id');
 

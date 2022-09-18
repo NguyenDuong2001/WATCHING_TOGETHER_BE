@@ -19,9 +19,17 @@ class UserController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request, User $user)
     {
-        //
+        if (!$request->user()->can('viewAny', $user)){
+            return response()->json([
+                'message' => 'Unauthorized',
+            ], 403);
+        }
+
+        return response()->json([
+            'users' => User::all()
+        ], 200);
     }
 
     /**
@@ -40,9 +48,15 @@ class UserController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(Request $request, User $user)
     {
         try{
+            if (!$request->user()->can('create', $user)){
+                return response()->json([
+                    'message' => 'Unauthorized',
+                ], 403);
+            }
+
             $validator = Validator::make($request->all(), [
                 'name' => ['required', 'max:50'],
                 'address' => ['required','max:255'],
@@ -147,7 +161,7 @@ class UserController extends Controller
             $user = User::findOrFail($id ? $id : Auth::user()->id);
             if (!$request->user()->can('update',$user)){
                 return response()->json([
-                    'message' => 'Can not update',
+                    'message' => 'Unauthorized',
                 ], 403);
             }
 
@@ -196,7 +210,7 @@ class UserController extends Controller
         try {
             if (!$request->user()->can('delete', $user)){
                 return response()->json([
-                    'message' => 'Can not delete',
+                    'message' => 'Unauthorized',
                 ], 403);
             }
 
