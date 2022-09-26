@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
@@ -28,7 +29,7 @@ class UserController extends Controller
         }
 
         return response()->json([
-            'users' => User::all()
+            'users' => User::paginate($request->limit ?: 5)
         ], 200);
     }
 
@@ -113,9 +114,17 @@ class UserController extends Controller
      * @param  \App\Models\User  $user
      * @return \Illuminate\Http\Response
      */
-    public function show(User $user)
+    public function show(User $user, $id)
     {
-        //
+        try {
+            return response()->json([
+                'user' => User::findOrFail($id)
+            ], 200);
+        }catch (\Exception $e){
+            return response()->json([
+                'message' => 'Not found user'
+            ],500);
+        }
     }
 
     /**
@@ -158,22 +167,30 @@ class UserController extends Controller
                     'errors' => $validator->errors(),
                 ]);
             }
-            $user = User::findOrFail($id ? $id : Auth::user()->id);
+
+            if (Auth::user()->role->name === RoleType::SuperAdmin && $request->input('role_id') && $request->input('ids')){
+                foreach ($request->input('ids') as $id){
+                    $user = User::find($id);
+                    if (!$user){
+                        continue;
+                    }
+
+                    $user->role_id = $request->input('role_id');
+                    $user->save();
+                }
+
+                return response()->json([
+                    'message' => 'Update successfully!',
+                ], 200);
+            }
+
+            $user = User::findOrFail(Auth::user()->id);
             if (!$request->user()->can('update',$user)){
                 return response()->json([
                     'message' => 'Unauthorized',
                 ], 403);
             }
 
-            if (Auth::user()->role->name === RoleType::SuperAdmin && $request->input('role_id')){
-                $user->role_id = $request->input('role_id');
-                $user->save();
-
-                return response()->json([
-                    'message' => 'Update successfully!',
-                    'user' => $user
-                ], 200);
-            }
 
             $user->name = $request->input('name') ? $request->input('name') : $user->name;
             $user->address = $request->input('address') ? $request->input('address') : $user->address;
