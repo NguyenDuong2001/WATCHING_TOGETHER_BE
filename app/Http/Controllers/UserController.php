@@ -64,7 +64,7 @@ class UserController extends Controller
                 'role_id' => ['exists:roles,id', 'required'],
                 'country_id' => ['exists:countries,id', 'nullable'],
                 'password' => ['required', 'max:255', Password::min(8)],
-                'avatar' => ['mimes:jpeg,jpg,png,gif', 'nullable','max:10000'],
+                'avatar' => $request->hasFile('avatar') ? ['mimes:jpeg,jpg,png,gif','max:10000'] :[],
                 'date_of_birth' => ['date_format:Y-m-d','before:today','nullable'],
                 'email' => ['required', 'regex:/([a-zA-Z0-9]+)?([a-zA-Z0-9]+)\@([a-zA-Z0-9]+)([\.])([a-zA-Z0-9\.]+)/u', 'unique:App\Models\User,email'],
                 'phone_number' => ['required', 'digits:10', 'unique:App\Models\User,phone_number'],
@@ -75,7 +75,7 @@ class UserController extends Controller
                     'status_code' => 500,
                     'message' => 'Data Invalid',
                     'errors' => $validator->errors(),
-                ]);
+                ], 500);
             }
 
             $user = User::create([
@@ -156,7 +156,7 @@ class UserController extends Controller
                 'role_id' => ['exists:roles,id', 'nullable'],
                 'country_id' => ['exists:countries,id', 'nullable'],
                 'password' => ['nullable', 'max:255', Password::min(8)],
-                'avatar' => ['mimes:jpeg,jpg,png,gif', 'nullable','max:10000'],
+                'avatar' => $request->hasFile('avatar') ? ['mimes:jpeg,jpg,png,gif','max:10000'] :[],
                 'date_of_birth' => ['date_format:Y-m-d','before:today','nullable'],
             ]);
 
@@ -165,7 +165,7 @@ class UserController extends Controller
                     'status_code' => 500,
                     'message' => 'Data Invalid',
                     'errors' => $validator->errors(),
-                ]);
+                ], 500);
             }
 
             if (Auth::user()->role->name === RoleType::SuperAdmin && $request->input('role_id') && $request->input('ids')){
