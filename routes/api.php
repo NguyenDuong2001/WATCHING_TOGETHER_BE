@@ -44,8 +44,18 @@ Route::middleware('auth:sanctum')->get("/users", [UserController::class, 'index'
 Route::middleware('auth:sanctum')->get("/users/{id}", [UserController::class, 'show'])->whereNumber('id');
 Route::middleware('auth:sanctum')->post("/users", [UserController::class, 'store']);
 Route::middleware('auth:sanctum')->put("/users/{id?}", [UserController::class, 'update'])->whereNumber('id');
-Route::middleware('auth:sanctum')->delete("/users/{id}", [UserController::class, 'destroy'])->whereNumber('id');
-
+Route::middleware('auth:sanctum')->delete("/users", [UserController::class, 'destroy']);
+Route::get('stream',function (){
+    $videosDir = config('larastreamer.basepath');
+    if (file_exists($filePath = $videosDir."/".'[S7] Tuyển Tập Doraemon - Phần 59 - Ngày Sinh Nhật Rỗng Túi Của Suneo, Triệu Phú Nobita.mp4')) {
+//        $stream = new \Raju\Streamer\Helpers\VideoStream($filePath);
+        \Iman\Streamer\VideoStreamer::streamFile($filePath);
+//        return response()->stream(function() use ($stream) {
+//            $stream->start();
+//        });
+    }
+    return response("File doesn't exists", 404);
+});
 
 Route::fallback(function(){
     return response()->json([

@@ -167,6 +167,13 @@ class UserController extends Controller
                     'errors' => $validator->errors(),
                 ], 500);
             }
+            $user = User::findOrFail(Auth::user()->id);
+
+            if (!$request->user()->can('update', $user)){
+                return response()->json([
+                    'message' => 'Unauthorized',
+                ], 403);
+            }
 
             if (Auth::user()->role->name === RoleType::SuperAdmin && $request->input('role_id') && $request->input('ids')){
                 foreach ($request->input('ids') as $id){
@@ -184,13 +191,11 @@ class UserController extends Controller
                 ], 200);
             }
 
-            $user = User::findOrFail(Auth::user()->id);
-            if (!$request->user()->can('update',$user)){
+            if ($request->input('password') && !Hash::check($request->input('old_password'), $user->password)){
                 return response()->json([
-                    'message' => 'Unauthorized',
-                ], 403);
+                    'message' => 'Old password invalid',
+                ], 500);
             }
-
 
             $user->name = $request->input('name') ? $request->input('name') : $user->name;
             $user->address = $request->input('address') ? $request->input('address') : $user->address;
@@ -222,7 +227,7 @@ class UserController extends Controller
      * @param  \App\Models\User  $user
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Request $request, User $user, $id)
+    public function destroy(Request $request, User $user)
     {
         try {
             if (!$request->user()->can('delete', $user)){
@@ -231,11 +236,18 @@ class UserController extends Controller
                 ], 403);
             }
 
-            User::findOrFail($id)->delete();
+            if (!$request->input('ids')){
+                return response()->json([
+                    'message' => 'Not found user',
+                ], 500);
+            }
+
+            User::find($request->input('ids'))->each(function ($user) {
+                $user->delete();
+            });
 
             return response()->json([
                 'message' => 'Delete successfully!',
-                'id' => $id
             ], 200);
         }catch (\Exception $exception){
             return response()->json([
