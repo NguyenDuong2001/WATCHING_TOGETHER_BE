@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\MovieStatus;
 
+use Illuminate\Support\Facades\Auth;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
@@ -38,14 +39,19 @@ class Movie extends Model implements HasMedia
 
     protected $appends = [
         'poster',
-        'video',
-        'actor',
+        'poster_sub',
         'country',
-        'trailer',
-        'director',
-        'category',
+        'categories',
         'thumbnail',
-        // 'IMDb'
+        'IMDb',
+        'director',
+        'actors',
+//        'video',
+//        'trailer',
+//        'user_rated'
+//        'rates',
+//        'rate'
+
     ];
 
     public function getPosterAttribute()
@@ -56,11 +62,28 @@ class Movie extends Model implements HasMedia
         if ($posters->count() <= 0){
             return [
                 "https://picsum.photos/id/".rand(1,100)."/1920/1080",
-                "https://picsum.photos/id/".rand(1,100)."/1920/1080"
             ];
         }
 
         foreach ($posters as $poster){
+            $listPosters->push($poster->getFullUrl());
+        }
+
+        return $listPosters;
+    }
+
+    public function getPosterSubAttribute()
+    {
+        $listPosters = collect([]);
+
+        $poster_sub = $this->getMedia('poster_sub');
+        if ($poster_sub->count() <= 0){
+            return [
+                "https://picsum.photos/id/".rand(1,100)."/1920/1080",
+            ];
+        }
+
+        foreach ($poster_sub as $poster){
             $listPosters->push($poster->getFullUrl());
         }
 
@@ -72,7 +95,7 @@ class Movie extends Model implements HasMedia
         $listVideos = collect([]);
 
         $videos = $this->getMedia('video');
-        if ($videos->count()){
+        if ($videos->count() > 0){
             foreach ($videos as $video){
                 $listVideos->push($video->getFullUrl());
             }
@@ -122,6 +145,14 @@ class Movie extends Model implements HasMedia
         return $sum / $rate->count() * 2;
     }
 
+    public function getUserRatedAttribute()
+    {
+        if (!Auth::user() || !$this->rates()->where('user_id', Auth::user()->id)->exists()) {
+            return null;
+        }
+        return $this->rates()->where('user_id', Auth::user()->id)->first()->rate;
+    }
+
     public function getCountryAttribute()
     {
         return $this->country()->first();
@@ -132,14 +163,27 @@ class Movie extends Model implements HasMedia
         return $this->director()->first();
     }
 
-    public function getActorAttribute()
+    public function getActorsAttribute()
     {
         return $this->actors()->get();
     }
 
-    public function getCategoryAttribute()
+    public function getCategoriesAttribute()
     {
         return $this->categories()->get();
+    }
+
+    public function getRatesAttribute()
+    {
+        return $this->rates()->get();
+    }
+
+    public function getRateAttribute()
+    {
+        return [
+            'count' => $this->rates()->count(),
+            'imdb' => $this->IMDb,
+        ];
     }
 
     public function actors()
@@ -162,15 +206,22 @@ class Movie extends Model implements HasMedia
         return $this->belongsTo(Director::class);
     }
 
-    public function rates(){
+    public function rates()
+    {
         return $this->hasMany(Rate::class);
+    }
+
+    public function comments()
+    {
+        return $this->hasMany(Comment::class);
     }
 
     public function registerMediaCollections(): void
     {
-        $this->addMediaCollection('poster');
-        $this->addMediaCollection('video');
-        $this->addMediaCollection('trailer');
+        $this->addMediaCollection('poster')->singleFile();
+        $this->addMediaCollection('poster_sub')->singleFile();
+        $this->addMediaCollection('video')->singleFile();
+        $this->addMediaCollection('trailer')->singleFile();
         $this->addMediaCollection('thumbnail')->singleFile();
     }
 
@@ -184,7 +235,7 @@ class Movie extends Model implements HasMedia
             }
 
             if ($country){
-                    $query->where('country_id', $country);
+                $query->where('country_id', $country);
             }
 
             return $query;

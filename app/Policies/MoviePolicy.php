@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Enums\RoleType;
 use App\Models\User;
 use App\Models\Movie;
 use Illuminate\Auth\Access\HandlesAuthorization;
@@ -18,7 +19,11 @@ class MoviePolicy
      */
     public function viewAny(User $user)
     {
-        return true;
+        if ($user->role->name === RoleType::SuperAdmin || $user->role->name === RoleType::Admin) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -30,7 +35,11 @@ class MoviePolicy
      */
     public function view(User $user, Movie $movie)
     {
-       //
+        if ($user->role->name === RoleType::SuperAdmin || $user->role->name === RoleType::Admin) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -41,7 +50,11 @@ class MoviePolicy
      */
     public function create(User $user)
     {
-        //
+        if ($user->role->name === RoleType::SuperAdmin || $user->role->name === RoleType::Admin) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -53,7 +66,11 @@ class MoviePolicy
      */
     public function update(User $user, Movie $movie)
     {
-        //
+        if ($user->role->name === RoleType::SuperAdmin || $user->role->name === RoleType::Admin) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -65,7 +82,11 @@ class MoviePolicy
      */
     public function delete(User $user, Movie $movie)
     {
-        //
+        if ($user->role->name === RoleType::SuperAdmin || $user->role->name === RoleType::Admin) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -90,5 +111,15 @@ class MoviePolicy
     public function forceDelete(User $user, Movie $movie)
     {
         //
+    }
+
+    public function rate(User $user, Movie $movie)
+    {
+        return true;
+    }
+
+    public function comment(User $user, Movie $movie): bool
+    {
+        return true;
     }
 }

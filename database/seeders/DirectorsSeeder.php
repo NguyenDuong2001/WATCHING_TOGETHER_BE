@@ -16,7 +16,7 @@ class DirectorsSeeder extends Seeder
      */
     public function run()
     {
-        $directors = Director::factory()->count(10)->create();
+        $directors = Director::factory()->count(20)->create();
 
         // foreach ($directors as $director){
         //     $director->addMediaFromUrl("https://source.unsplash.com/random/500x500")->toMediaCollection('images');

@@ -14,4 +14,22 @@ class Reply extends Model
         'user_id',
         'comment_id'
     ];
+
+    protected $appends = [
+        'user',
+    ];
+
+    public function getUserAttribute()
+    {
+        return $this->user()->first();
+    }
+
+    public function user() {
+        return $this->belongsTo(User::class)->select('id','name', 'email');
+    }
+
+    public function comment()
+    {
+        return $this->belongsTo(Comment::class);
+    }
 }

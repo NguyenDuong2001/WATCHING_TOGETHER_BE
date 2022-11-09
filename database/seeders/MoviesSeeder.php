@@ -22,7 +22,6 @@ class MoviesSeeder extends Seeder
 
         $movie = Movie::factory()->count(1)->create([
             'name' => 'Red Notice',
-            'year' => '2021',
             'movie_duration' => 118,
             'view' => 2304,
             'publication_time' => '2021-11-9',
@@ -37,7 +36,7 @@ class MoviesSeeder extends Seeder
         );
 
         $movie[0]->addMediaFromUrl('https://www.elleman.vn/wp-content/uploads/2021/12/06/207758/review-phim-red-notice-elle-man-cover-1.jpeg')->toMediaCollection('poster');
-        $movie[0]->addMediaFromUrl('https://staticg.sportskeeda.com/editor/2021/11/412e4-16367363983803-1920.jpg')->toMediaCollection('poster');
+        $movie[0]->addMediaFromUrl('https://staticg.sportskeeda.com/editor/2021/11/412e4-16367363983803-1920.jpg')->toMediaCollection('poster_sub');
         $movie[0]->addMediaFromUrl('https://cdn06.pramborsfm.com/storage/app/media/Prambors/Editorial/red%20notice-20211115192124.jpg?tr=w-800')->toMediaCollection('thumbnail');
 
         $movies = Movie::factory()->count(100)->create();

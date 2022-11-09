@@ -33,6 +33,8 @@ Route::post('/sign-up', [RegisterController::class, 'store']);
 Route::get('/movies/{option}', [MovieController::class, 'index']);
 
 Route::get('/categories', [CategoryController::class, 'index']);
+Route::get('/categories/{id}', [CategoryController::class, 'show'])->whereNumber('id');
+
 Route::get('/countries', [CountryController::class, 'index']);
 Route::middleware('auth:sanctum')->get("/roles", function (){
     return response()->json([
@@ -40,11 +42,42 @@ Route::middleware('auth:sanctum')->get("/roles", function (){
     ], 200);
 });
 
+Route::get("/directors/{id}", [\App\Http\Controllers\DirectorController::class, 'show'])->whereNumber('id');
+Route::get("/actors/{id}", [\App\Http\Controllers\ActorController::class, 'show'])->whereNumber('id');
+Route::middleware(\App\Http\Middleware\Customer::class)->get("/movie/{id}", [\App\Http\Controllers\MovieController::class, 'show'])->whereNumber('id');
+
 Route::middleware('auth:sanctum')->get("/users", [UserController::class, 'index']);
+
 Route::middleware('auth:sanctum')->get("/users/{id}", [UserController::class, 'show'])->whereNumber('id');
 Route::middleware('auth:sanctum')->post("/users", [UserController::class, 'store']);
-Route::middleware('auth:sanctum')->put("/users/{id?}", [UserController::class, 'update'])->whereNumber('id');
+Route::middleware('auth:sanctum')->put("/users", [UserController::class, 'update']);
 Route::middleware('auth:sanctum')->delete("/users", [UserController::class, 'destroy']);
+
+Route::middleware('auth:sanctum')->get("/admin/directors", [\App\Http\Controllers\DirectorController::class, 'index']);
+Route::middleware('auth:sanctum')->post("/admin/directors", [\App\Http\Controllers\DirectorController::class, 'store']);
+Route::middleware('auth:sanctum')->put("/admin/directors", [\App\Http\Controllers\DirectorController::class, 'update']);
+Route::middleware('auth:sanctum')->delete("/admin/directors", [\App\Http\Controllers\DirectorController::class, 'destroy']);
+
+Route::middleware('auth:sanctum')->post("/admin/categories", [\App\Http\Controllers\CategoryController::class, 'store']);
+Route::middleware('auth:sanctum')->put("/admin/categories", [\App\Http\Controllers\CategoryController::class, 'update']);
+Route::middleware('auth:sanctum')->delete("/admin/categories", [\App\Http\Controllers\CategoryController::class, 'destroy']);
+
+Route::middleware('auth:sanctum')->get("/admin/actors", [\App\Http\Controllers\ActorController::class, 'index']);
+Route::middleware('auth:sanctum')->post("/admin/actors", [\App\Http\Controllers\ActorController::class, 'store']);
+Route::middleware('auth:sanctum')->put("/admin/actors", [\App\Http\Controllers\ActorController::class, 'update']);
+Route::middleware('auth:sanctum')->delete("/admin/actors", [\App\Http\Controllers\ActorController::class, 'destroy']);
+
+Route::middleware('auth:sanctum')->get("/admin/movies", [MovieController::class, 'index_admin']);
+Route::middleware('auth:sanctum')->get("/admin/movies/{id}", [MovieController::class, 'show_admin'])->whereNumber('id');
+Route::middleware('auth:sanctum')->post("/admin/movies", [MovieController::class, 'store']);
+Route::middleware('auth:sanctum')->put("/admin/movies", [MovieController::class, 'update']);
+Route::middleware('auth:sanctum')->put("/admin/movies/status", [MovieController::class, 'set_status']);
+Route::middleware('auth:sanctum')->delete("/admin/movies", [MovieController::class, 'destroy']);
+Route::middleware('auth:sanctum')->post("/movie/rate", [MovieController::class, 'rate']);
+Route::middleware('auth:sanctum')->post("/movie/comment", [MovieController::class, 'comment']);
+Route::middleware('auth:sanctum')->post("/comment/reply", [MovieController::class, 'reply']);
+
+
 Route::get('stream',function (){
     $videosDir = config('larastreamer.basepath');
     if (file_exists($filePath = $videosDir."/".'[S7] Tuyển Tập Doraemon - Phần 59 - Ngày Sinh Nhật Rỗng Túi Của Suneo, Triệu Phú Nobita.mp4')) {

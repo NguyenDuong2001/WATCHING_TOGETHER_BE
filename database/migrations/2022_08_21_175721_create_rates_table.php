@@ -18,6 +18,7 @@ return new class extends Migration
             $table->integer('rate');
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->foreignId('movie_id')->constrained('movies')->onDelete('cascade');
+            $table->unique(['user_id', 'movie_id']);
             $table->timestamps();
         });
     }

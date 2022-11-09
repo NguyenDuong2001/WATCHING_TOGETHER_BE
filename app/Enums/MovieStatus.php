@@ -13,4 +13,5 @@ final class MovieStatus extends Enum
 {
     const Draft = 'Draft';
     const Published = "Published";
+    const Archived = "Archived";
 }

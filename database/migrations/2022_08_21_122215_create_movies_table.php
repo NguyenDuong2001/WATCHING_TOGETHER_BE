@@ -16,18 +16,17 @@ return new class extends Migration
     {
         Schema::create('movies', function (Blueprint $table) {
             $table->id();
-            $table->integer('year');
-            $table->integer('view');
+            $table->integer('view')->default(0);
             $table->string('name')->unique();
-            $table->date('publication_time');
+            $table->timestamp('publication_time');
             $table->string('company')->nullable();
-            $table->json('url_video')->nullable();
+            $table->string('url_video')->nullable();
             $table->integer('limit_age')->nullable();
             $table->longText('description')->nullable();
             $table->boolean('is_series')->default(false);
             $table->integer('movie_duration')->nullable();
             $table->string('status')->default(MovieStatus::Draft);
-            $table->foreignId('director_id')->constrained('directors');
+            $table->foreignId('director_id')->nullable()->constrained('directors')->nullOnDelete();
             $table->foreignId('country_id')->nullable()->constrained('countries');
             $table->timestamps();
         });

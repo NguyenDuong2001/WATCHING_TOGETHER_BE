@@ -56,7 +56,7 @@ class User extends Authenticatable implements HasMedia
         $avatars = $this->getMedia('avatar');
 
         if ($avatars->count() <= 0){
-            return ["https://robohash.org/".rand(1,1000)];
+            return ['https://i.pravatar.cc/300?img='.rand(1, 70)];
         }
 
         foreach ($avatars as $avatar){

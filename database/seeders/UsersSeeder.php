@@ -23,6 +23,13 @@ class UsersSeeder extends Seeder
         ]);
 
         User::factory()->create([
+            'name' => 'Super Admin',
+            'email' => 'superadmin1@gmail.com',
+            'role_id' => 1,
+            'country_id' => 1
+        ]);
+
+        User::factory()->create([
             'name' => 'Admin',
             'email' => 'admin@gmail.com',
             'role_id' => 2,

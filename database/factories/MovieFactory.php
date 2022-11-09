@@ -22,7 +22,6 @@ class MovieFactory extends Factory
 
         return [
             'name' => fake()->words(5, true),
-            'year' => fake()->numberBetween(2010, 2022),
             'movie_duration' => fake()->numberBetween(30, 150),
             'publication_time' => fake()->date(),
             'view' => fake()->numberBetween(900, 2000),

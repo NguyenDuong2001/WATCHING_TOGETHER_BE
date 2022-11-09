@@ -24,7 +24,8 @@ class Director extends Model implements HasMedia
     ];
 
     protected $appends = [
-        'avatar'
+        'avatar',
+        'country'
     ];
 
     public function getAvatarAttribute()
@@ -34,7 +35,7 @@ class Director extends Model implements HasMedia
         $avatars = $this->getMedia('avatar');
 
         if ($avatars->count() <= 0){
-            return ["https://robohash.org/".rand(1,1000)];
+            return ['https://i.pravatar.cc/300?img='.rand(1, 70)];
         }
 
         foreach ($avatars as $avatar){
@@ -43,7 +44,7 @@ class Director extends Model implements HasMedia
 
         return $listAvatars;
     }
-    
+
     public function registerMediaCollections(): void
     {
         $this->addMediaCollection('avatar')->singleFile();
@@ -51,5 +52,14 @@ class Director extends Model implements HasMedia
 
     public function movies(){
         return $this->hasMany(Movie::class);
+    }
+
+    public function country() {
+        return $this->belongsTo(Country::class);
+    }
+
+    public function getCountryAttribute()
+    {
+        return $this->country()->first();
     }
 }

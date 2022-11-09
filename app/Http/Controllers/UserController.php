@@ -22,14 +22,17 @@ class UserController extends Controller
      */
     public function index(Request $request, User $user)
     {
-        if (!$request->user()->can('viewAny', $user)){
+        $this->authorize('viewAny', $user);
+
+        $search = Str::of($request->get('search'))->trim();
+        if ($search != "") {
             return response()->json([
-                'message' => 'Unauthorized',
-            ], 403);
+                'users' => User::where('name', 'like', "%$search%")->paginate($request->get('limit') ?: 5),
+            ],200);
         }
 
         return response()->json([
-            'users' => User::paginate($request->limit ?: 5)
+            'users' => User::paginate($request->get('limit') ?: 5)
         ], 200);
     }
 
@@ -146,7 +149,7 @@ class UserController extends Controller
      * @return \Illuminate\Http\Response
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function update(Request $request, $id = null)
+    public function update(Request $request)
     {
         //_method=PUT
         try{
@@ -236,7 +239,10 @@ class UserController extends Controller
                 ], 403);
             }
 
-            if (!$request->input('ids')){
+            if (!$request->input('ids') ||
+                !is_array($request->input('ids')) ||
+                empty($request->input('ids')))
+            {
                 return response()->json([
                     'message' => 'Not found user',
                 ], 500);
