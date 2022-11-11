@@ -78,7 +78,7 @@ class UserPolicy
      */
     public function delete(User $user,  User $model)
     {
-        if ($user->role->name === RoleType::SuperAdmin) {
+        if ($user->role->name === RoleType::SuperAdmin && $user->id != $model->id) {
             return true;
         }
 

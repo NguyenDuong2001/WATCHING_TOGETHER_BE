@@ -78,11 +78,11 @@ class DirectorPolicy
      */
     public function delete(User $user, Director $director)
     {
-        if ($user->role->name === RoleType::SuperAdmin || $user->role->name === RoleType::Admin) {
-            return true;
+        if (($user->role->name !== RoleType::SuperAdmin && $user->role->name !== RoleType::Admin) || $director->movies()->count() > 0) {
+            return false;
         }
 
-        return false;
+        return true;
     }
 
     /**

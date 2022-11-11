@@ -20,6 +20,8 @@ class MoviesSeeder extends Seeder
         $categories = Category::all();
         $actors = Actor::all();
 
+        $movies = Movie::factory()->count(100)->create();
+
         $movie = Movie::factory()->count(1)->create([
             'name' => 'Red Notice',
             'movie_duration' => 118,
@@ -39,7 +41,6 @@ class MoviesSeeder extends Seeder
         $movie[0]->addMediaFromUrl('https://staticg.sportskeeda.com/editor/2021/11/412e4-16367363983803-1920.jpg')->toMediaCollection('poster_sub');
         $movie[0]->addMediaFromUrl('https://cdn06.pramborsfm.com/storage/app/media/Prambors/Editorial/red%20notice-20211115192124.jpg?tr=w-800')->toMediaCollection('thumbnail');
 
-        $movies = Movie::factory()->count(100)->create();
         foreach ($movies as $movie){
             $movie->actors()->attach(
                 $actors->random(rand(2,5))->pluck('id')->toArray()

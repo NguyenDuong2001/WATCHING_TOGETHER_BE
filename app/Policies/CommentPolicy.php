@@ -2,12 +2,11 @@
 
 namespace App\Policies;
 
-use App\Enums\RoleType;
-use App\Models\Category;
+use App\Models\Comment;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
-class CategoryPolicy
+class CommentPolicy
 {
     use HandlesAuthorization;
 
@@ -26,10 +25,10 @@ class CategoryPolicy
      * Determine whether the user can view the model.
      *
      * @param  \App\Models\User  $user
-     * @param  \App\Models\Category  $category
+     * @param  \App\Models\Comment  $comment
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function view(User $user, Category $category)
+    public function view(User $user, Comment $comment)
     {
         //
     }
@@ -42,53 +41,41 @@ class CategoryPolicy
      */
     public function create(User $user)
     {
-        if ($user->role->name === RoleType::SuperAdmin || $user->role->name === RoleType::Admin) {
-            return true;
-        }
-
-        return false;
+        //
     }
 
     /**
      * Determine whether the user can update the model.
      *
      * @param  \App\Models\User  $user
-     * @param  \App\Models\Category  $category
+     * @param  \App\Models\Comment  $comment
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function update(User $user, Category $category)
+    public function update(User $user, Comment $comment)
     {
-        if ($user->role->name === RoleType::SuperAdmin || $user->role->name === RoleType::Admin) {
-            return true;
-        }
-
-        return false;
+        return $user->comments()->where('id', $comment->id)->exists();
     }
 
     /**
      * Determine whether the user can delete the model.
      *
      * @param  \App\Models\User  $user
-     * @param  \App\Models\Category  $category
+     * @param  \App\Models\Comment  $comment
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function delete(User $user, Category $category)
+    public function delete(User $user, Comment $comment)
     {
-        if (($user->role->name !== RoleType::SuperAdmin && $user->role->name !== RoleType::Admin) || $category->movies()->count() > 0) {
-            return false;
-        }
-
-        return true;
+        return $user->comments()->where('id', $comment->id)->exists();
     }
 
     /**
      * Determine whether the user can restore the model.
      *
      * @param  \App\Models\User  $user
-     * @param  \App\Models\Category  $category
+     * @param  \App\Models\Comment  $comment
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function restore(User $user, Category $category)
+    public function restore(User $user, Comment $comment)
     {
         //
     }
@@ -97,10 +84,10 @@ class CategoryPolicy
      * Determine whether the user can permanently delete the model.
      *
      * @param  \App\Models\User  $user
-     * @param  \App\Models\Category  $category
+     * @param  \App\Models\Comment  $comment
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function forceDelete(User $user, Category $category)
+    public function forceDelete(User $user, Comment $comment)
     {
         //
     }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Actor;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
@@ -177,24 +178,32 @@ class ActorController extends Controller
      * @param  \App\Models\Actor  $actor
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Request$request, Actor $actor)
+    public function destroy(Request $request)
     {
         try {
-            $this->authorize('delete', $actor);
+            $validator = Validator::make($request->all(), [
+                'ids' => 'required|array',
+                'ids.*' => 'numeric|exists:actors,id',
+            ]);
 
-            if (!$request->input('ids') ||
-                !is_array($request->input('ids')) ||
-                empty($request->input('ids')))
-            {
+            if ($validator->fails()) {
                 return response()->json([
-                    'message' => 'Not found actor',
+                    'status_code' => 500,
+                    'message' => 'Data Invalid',
+                    'errors' => $validator->errors(),
                 ], 500);
             }
 
-            Actor::findOrFail($request->input('ids'))->each(fn($actor) => $actor->delete());
+            $delete_fail = collect();
+            Actor::findOrFail($request->input('ids'))->each(fn($actor) =>
+                Auth::user()->can('delete', $actor) ?
+                $actor->delete() : $delete_fail->push($actor)
+            );
+
             return response()->json([
                 'message' => 'Delete successfully!',
-            ], 200);
+                'delete_fail' => $delete_fail
+            ]);
         }catch (\Exception $exception){
             return response()->json([
                 'message' => 'Not found actor',

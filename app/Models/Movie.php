@@ -253,17 +253,21 @@ class Movie extends Model implements HasMedia
             return $query->get()->sortByDesc('IMDb')->values()->slice(0,$limit);
         }
 
-        $movies = collect([]);
+        if ($option == 'banner') {
+            $movies = collect([]);
 
-        $most_view = $query->orderBy('view', 'desc')->first();
-        $movies->push($most_view);
+            $most_view = $query->orderBy('view', 'desc')->first();
+            $movies->push($most_view);
 
-        $most_publication_time = $query->whereNotIn('id', [$most_view->id])->orderBy('publication_time', 'desc')->first();
-        $movies->push($most_publication_time);
+            $most_publication_time = $query->whereNotIn('id', [$most_view->id])->orderBy('publication_time', 'desc')->first();
+            $movies->push($most_publication_time);
 
-        $movies->push($query->whereNotIn('id', [$most_view->id, $most_publication_time->id])->get()->sortByDesc('IMDb')->first());
+            $movies->push($query->whereNotIn('id', [$most_view->id, $most_publication_time->id])->get()->sortByDesc('IMDb')->first());
 
-        return $movies;
+            return $movies;
+        }
+
+        return $query->get();
     }
 
     /**

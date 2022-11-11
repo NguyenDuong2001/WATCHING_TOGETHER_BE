@@ -4,12 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Enums\ActivityType;
 use App\Enums\MovieStatus;
-use App\Enums\RoleType;
+use App\Enums\ReviewStatus;
 use App\Models\Activity;
 use App\Models\Comment;
 use App\Models\Movie;
 use App\Models\Rate;
 use App\Models\Reply;
+use App\Models\Review;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
@@ -29,6 +30,27 @@ class MovieController extends Controller
         return response()->json([
             'movies' => Movie::options($option, $request->limit, $request->category, $request->country),
         ], 200);
+    }
+
+    /**
+     * Display a listing of the resource.
+     * @param Request $request
+     * @return Response
+     */
+    public function similar(Request $request, $id)
+    {
+        try {
+            $category_ids = Movie::findOrFail($id)->categories->pluck('id');
+            return response()->json([
+                'movies' => Movie::whereHas('categories', function ($query) use($request, $category_ids) {
+                    $query->whereIn('categories.id', $category_ids);
+                })->limit($request->query('limit') ?:6)->get(),
+            ]);
+        }catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Not found Movie',
+            ], 500);
+        }
     }
 
     /**
@@ -102,47 +124,50 @@ class MovieController extends Controller
                 'errors' => $validator->errors(),
             ], 500);
         }
+
         try {
-            $movie = Movie::create([
-                'name' => $request->input('name'),
-                'description' => $request->input('description'),
-                'publication_time' => $request->input('publication_time'),
-                'company' => $request->input('company'),
-                'url_video' => $request->input('url_video'),
-                'limit_age' => $request->input('limit_age'),
-                'is_series' => $request->input('is_series') ?: false,
-                'movie_duration' => $request->input('movie_duration'),
-                'director_id' => $request->input('director_id'),
-                'country_id' => $request->input('country_id'),
-            ]);
+            DB::transaction(function () use ($request) {
+                $movie = Movie::create([
+                    'name' => $request->input('name'),
+                    'description' => $request->input('description'),
+                    'publication_time' => $request->input('publication_time'),
+                    'company' => $request->input('company'),
+                    'url_video' => $request->input('url_video'),
+                    'limit_age' => $request->input('limit_age'),
+                    'is_series' => $request->input('is_series') ?: false,
+                    'movie_duration' => $request->input('movie_duration'),
+                    'director_id' => $request->input('director_id'),
+                    'country_id' => $request->input('country_id'),
+                ]);
 
-            if ($request->input('categories')) {
-                foreach ($request->input('categories') as $id) {
-                    if ($movie->categories()->where('categories.id', $id)->exists()) {
-                        continue;
+                if ($request->input('categories')) {
+                    foreach ($request->input('categories') as $id) {
+                        if ($movie->categories()->where('categories.id', $id)->exists()) {
+                            continue;
+                        }
+
+                        $movie->categories()->attach($id);
                     }
-
-                    $movie->categories()->attach($id);
                 }
-            }
 
-            if ($request->input('actors')) {
-                foreach ($request->input('actors') as $id) {
-                    if ($movie->actors()->where('actors.id', $id)->exists()) {
-                        continue;
+                if ($request->input('actors')) {
+                    foreach ($request->input('actors') as $id) {
+                        if ($movie->actors()->where('actors.id', $id)->exists()) {
+                            continue;
+                        }
+
+                        $movie->actors()->attach($id);
                     }
-
-                    $movie->actors()->attach($id);
                 }
-            }
 
-            $this->uploadFile($request, $movie);
+                $this->uploadFile($request, $movie);
+            });
 
             return response()->json([
                 'message' => 'Create movie successfully!',
-                'movie' => $movie
             ]);
         }catch (\Exception $e){
+            dd($e);
             return response()->json([
                 'message' => 'Create movie fail'
             ],500);
@@ -162,7 +187,6 @@ class MovieController extends Controller
         try {
             return response()->json([
                 'movie' => Movie::findOrFail($id)->append(['video','trailer', 'user_rated', 'rate']),
-                'comments' => Movie::findOrFail($id)->comments
             ]);
         }catch (\Exception $e){
             return response()->json([
@@ -246,46 +270,47 @@ class MovieController extends Controller
         }
 
         try {
-            $movie = Movie::withoutGlobalScope('Published')->findOrFail($request->input('id'));
-            $movie->name = $request->input('name') ?: $movie->name;
-            $movie->description = $request->input('description') ?: $movie->description;
-            $movie->company = $request->input('company') ?: $movie->company;
-            $movie->url_video = $request->input('url_video') ?: $movie->url_video;
-            $movie->limit_age = $request->input('limit_age') ?: $movie->limit_age;
-            $movie->country_id = $request->input('country_id') ?: $movie->country_id;
-            $movie->is_series = $request->input('is_series') ?: $movie->is_series;
-            $movie->movie_duration = $request->input('movie_duration') ?: $movie->movie_duration;
-            $movie->director_id = $request->input('director_id') ?: $movie->director_id;
-            $movie->publication_time = $request->input('publication_time') ?: $movie->publication_time;
-            $movie->save();
+            DB::transaction(function () use ($request){
+                $movie = Movie::withoutGlobalScope('Published')->findOrFail($request->input('id'));
+                $movie->name = $request->input('name') ?: $movie->name;
+                $movie->description = $request->input('description') ?: $movie->description;
+                $movie->company = $request->input('company') ?: $movie->company;
+                $movie->url_video = $request->input('url_video') ?: $movie->url_video;
+                $movie->limit_age = $request->input('limit_age') ?: $movie->limit_age;
+                $movie->country_id = $request->input('country_id') ?: $movie->country_id;
+                $movie->is_series = $request->input('is_series') ?: $movie->is_series;
+                $movie->movie_duration = $request->input('movie_duration') ?: $movie->movie_duration;
+                $movie->director_id = $request->input('director_id') ?: $movie->director_id;
+                $movie->publication_time = $request->input('publication_time') ?: $movie->publication_time;
+                $movie->save();
 
-            if ($request->input('categories')) {
-                $movie->categories()->detach();
-                foreach ($request->input('categories') as $id) {
-                    if ($movie->categories()->where('categories.id', $id)->exists()) {
-                        continue;
+                if ($request->input('categories')) {
+                    $movie->categories()->detach();
+                    foreach ($request->input('categories') as $id) {
+                        if ($movie->categories()->where('categories.id', $id)->exists()) {
+                            continue;
+                        }
+
+                        $movie->categories()->attach($id);
                     }
-
-                    $movie->categories()->attach($id);
                 }
-            }
 
-            if ($request->input('actors')) {
-                $movie->actors()->detach();
-                foreach ($request->input('actors') as $id) {
-                    if ($movie->actors()->where('actors.id', $id)->exists()) {
-                        continue;
+                if ($request->input('actors')) {
+                    $movie->actors()->detach();
+                    foreach ($request->input('actors') as $id) {
+                        if ($movie->actors()->where('actors.id', $id)->exists()) {
+                            continue;
+                        }
+
+                        $movie->actors()->attach($id);
                     }
-
-                    $movie->actors()->attach($id);
                 }
-            }
 
-            $this->uploadFile($request, $movie);
+                $this->uploadFile($request, $movie);
+            });
 
             return response()->json([
                 'message' => 'Update successfully!',
-                'movie' => $movie
             ]);
 
         }catch (\Exception $e) {
@@ -309,6 +334,7 @@ class MovieController extends Controller
 
             $validator = Validator::make($request->all(), [
                 'ids' => ['required', 'array'],
+                'ids.*' => 'numeric|exists:movies,id',
                 'status' => ['required', function($attribute, $value, $fail) {
                     $movie_status = collect([MovieStatus::Published, MovieStatus::Archived]);
                     if (!$movie_status->contains($value)) {
@@ -360,16 +386,21 @@ class MovieController extends Controller
         try {
             $this->authorize('delete', $movie);
 
-            if (!$request->input('ids') ||
-                !is_array($request->input('ids')) ||
-                empty($request->input('ids')))
-            {
+            $validator = Validator::make($request->all(), [
+                'ids' => 'required|array',
+                'ids.*' => 'numeric|exists:movies,id',
+            ]);
+
+            if ($validator->fails()) {
                 return response()->json([
-                    'message' => 'Not found category',
+                    'status_code' => 500,
+                    'message' => 'Data Invalid',
+                    'errors' => $validator->errors(),
                 ], 500);
             }
 
             Movie::withoutGlobalScope('Published')->findOrFail($request->input('ids'))->each(fn($movie) => $movie->delete());
+
             return response()->json([
                 'message' => 'Delete successfully!',
             ]);
@@ -400,11 +431,6 @@ class MovieController extends Controller
             $movie = Movie::findOrFail($request->get('id'));
             $this->authorize('rate', $movie);
 
-            if (Rate::where('user_id', Auth::user()->id)->where('movie_id', $request->get('id'))->exists()) {
-                return response()->json([
-                    'message' => 'This user has rated this movie',
-                ], 500);
-            }
             DB::transaction(function () use ($request)
             {
                 Activity::create([
@@ -416,9 +442,10 @@ class MovieController extends Controller
                     'type' => ActivityType::Rate,
                 ]);
 
-                Rate::create([
+                Rate::updateOrCreate([
                     'user_id' => Auth::user()->id,
                     'movie_id' => $request->get('id'),
+                ],[
                     'rate' => $request->get('rate'),
                 ]);
             });
@@ -429,52 +456,6 @@ class MovieController extends Controller
         }catch (\Exception $e) {
             return response()->json([
                 'message' => 'Rate failed',
-            ], 500);
-        }
-    }
-
-    public function comment(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'id' => ['required', 'numeric', 'exists:movies,id'],
-            'content' => ['required', 'max:255'],
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'status_code' => 500,
-                'message' => 'Data Invalid',
-                'errors' => $validator->errors(),
-            ], 500);
-        }
-        try {
-            $movie = Movie::findOrFail($request->get('id'));
-            $this->authorize('comment', $movie);
-
-            DB::transaction(function () use ($request)
-            {
-                Activity::create([
-                    'user_id' => Auth::user()->id,
-                    'object_id' => $request->get('id'),
-                    'object_type' => Movie::class,
-                    'description' => 'User #' . Auth::user()->id . ' commented as "' . $request->get('content') . '" in movie #' . $request->get('id'),
-                    'content' => $request->get('content'),
-                    'type' => ActivityType::Comment,
-                ]);
-
-                Comment::create([
-                    'user_id' => Auth::user()->id,
-                    'movie_id' => $request->get('id'),
-                    'content' => $request->get('content'),
-                ]);
-            });
-
-            return response()->json([
-                'message' => 'Comment successfully!',
-            ]);
-        }catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Comment failed',
             ], 500);
         }
     }
@@ -519,6 +500,19 @@ class MovieController extends Controller
         }catch (\Exception $e) {
             return response()->json([
                 'message' => 'Reply failed',
+            ], 500);
+        }
+    }
+
+    public function reviews(Request $request, $id)
+    {
+        try {
+            return response()->json([
+                'reviews' => Review::where('status', ReviewStatus::Published)->where('movie_id', $id)->get(),
+            ]);
+        }catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Not found reviews',
             ], 500);
         }
     }

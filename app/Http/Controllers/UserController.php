@@ -179,19 +179,22 @@ class UserController extends Controller
             }
 
             if (Auth::user()->role->name === RoleType::SuperAdmin && $request->input('role_id') && $request->input('ids')){
+                $update_fail = collect([]);
                 foreach ($request->input('ids') as $id){
-                    $user = User::find($id);
-                    if (!$user){
+                    if (Auth::user()->id == $id) {
+                        $update_fail->push(Auth::user());
                         continue;
                     }
 
+                    $user = User::findOrFail($id);
                     $user->role_id = $request->input('role_id');
                     $user->save();
                 }
 
                 return response()->json([
                     'message' => 'Update successfully!',
-                ], 200);
+                    'update_fail' => $update_fail
+                ]);
             }
 
             if ($request->input('password') && !Hash::check($request->input('old_password'), $user->password)){
@@ -230,30 +233,30 @@ class UserController extends Controller
      * @param  \App\Models\User  $user
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Request $request, User $user)
+    public function destroy(Request $request)
     {
         try {
-            if (!$request->user()->can('delete', $user)){
-                return response()->json([
-                    'message' => 'Unauthorized',
-                ], 403);
-            }
+            $validator = Validator::make($request->all(), [
+                'ids' => 'required|array',
+                'ids.*' => 'numeric|exists:users,id',
+            ]);
 
-            if (!$request->input('ids') ||
-                !is_array($request->input('ids')) ||
-                empty($request->input('ids')))
-            {
+            if ($validator->fails()) {
                 return response()->json([
-                    'message' => 'Not found user',
+                    'status_code' => 500,
+                    'message' => 'Data Invalid',
+                    'errors' => $validator->errors(),
                 ], 500);
             }
 
-            User::find($request->input('ids'))->each(function ($user) {
-                $user->delete();
-            });
+            $delete_fail = collect();
+            User::findOrFail($request->input('ids'))->each(fn ($user) =>
+                Auth::user()->can('delete', $user) ? $user->delete() : $delete_fail->push($user)
+            );
 
             return response()->json([
                 'message' => 'Delete successfully!',
+                'delete_fail' => $delete_fail
             ], 200);
         }catch (\Exception $exception){
             return response()->json([

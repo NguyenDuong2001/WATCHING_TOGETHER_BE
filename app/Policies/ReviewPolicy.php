@@ -2,12 +2,13 @@
 
 namespace App\Policies;
 
+use App\Enums\ReviewStatus;
 use App\Enums\RoleType;
-use App\Models\Category;
+use App\Models\Review;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
-class CategoryPolicy
+class ReviewPolicy
 {
     use HandlesAuthorization;
 
@@ -19,17 +20,17 @@ class CategoryPolicy
      */
     public function viewAny(User $user)
     {
-        //
+        return $user->role->name === RoleType::SuperAdmin || $user->role->name === RoleType::Checker;
     }
 
     /**
      * Determine whether the user can view the model.
      *
      * @param  \App\Models\User  $user
-     * @param  \App\Models\Category  $category
+     * @param  \App\Models\Review  $review
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function view(User $user, Category $category)
+    public function view(User $user, Review $review)
     {
         //
     }
@@ -42,53 +43,43 @@ class CategoryPolicy
      */
     public function create(User $user)
     {
-        if ($user->role->name === RoleType::SuperAdmin || $user->role->name === RoleType::Admin) {
-            return true;
-        }
-
-        return false;
+        //
     }
 
     /**
      * Determine whether the user can update the model.
      *
      * @param  \App\Models\User  $user
-     * @param  \App\Models\Category  $category
+     * @param  \App\Models\Review  $review
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function update(User $user, Category $category)
+    public function update(User $user, Review $review)
     {
-        if ($user->role->name === RoleType::SuperAdmin || $user->role->name === RoleType::Admin) {
-            return true;
-        }
-
-        return false;
+        return $user->id === $review->author_id &&
+                $review->status !== ReviewStatus::Canceled &&
+                $review->status !== ReviewStatus::Archived;
     }
 
     /**
      * Determine whether the user can delete the model.
      *
      * @param  \App\Models\User  $user
-     * @param  \App\Models\Category  $category
+     * @param  \App\Models\Review  $review
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function delete(User $user, Category $category)
+    public function delete(User $user, Review $review)
     {
-        if (($user->role->name !== RoleType::SuperAdmin && $user->role->name !== RoleType::Admin) || $category->movies()->count() > 0) {
-            return false;
-        }
-
-        return true;
+        //
     }
 
     /**
      * Determine whether the user can restore the model.
      *
      * @param  \App\Models\User  $user
-     * @param  \App\Models\Category  $category
+     * @param  \App\Models\Review  $review
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function restore(User $user, Category $category)
+    public function restore(User $user, Review $review)
     {
         //
     }
@@ -97,11 +88,27 @@ class CategoryPolicy
      * Determine whether the user can permanently delete the model.
      *
      * @param  \App\Models\User  $user
-     * @param  \App\Models\Category  $category
+     * @param  \App\Models\Review  $review
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function forceDelete(User $user, Category $category)
+    public function forceDelete(User $user, Review $review)
     {
         //
+    }
+
+    /**
+     * Determine whether the user can permanently delete the model.
+     *
+     * @param  \App\Models\User  $user
+     * @param  \App\Models\Review  $review
+     * @return \Illuminate\Auth\Access\Response|bool
+     */
+    public function set_status(User $user, Review $review)
+    {
+        return (
+            $user->role->name === RoleType::SuperAdmin ||
+            $user->role->name === RoleType::Checker
+        ) && $review->status !== ReviewStatus::Canceled &&
+            $review->status !== ReviewStatus::Archived;
     }
 }

@@ -17,11 +17,12 @@ class Customer
      */
     public function handle(Request $request, Closure $next)
     {
-        if ($request->bearerToken()) {
+        if (Auth::guard('sanctum')->check()) {
             Auth::setUser(
                 Auth::guard('sanctum')->user()
             );
         }
+
         return $next($request);
     }
 }

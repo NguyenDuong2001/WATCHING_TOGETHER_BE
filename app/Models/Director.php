@@ -20,12 +20,14 @@ class Director extends Model implements HasMedia
     ];
 
     protected $hidden=[
-        'media'
+        'media',
+        'country_id'
     ];
 
     protected $appends = [
         'avatar',
-        'country'
+        'country',
+        'movie_joined'
     ];
 
     public function getAvatarAttribute()
@@ -45,6 +47,16 @@ class Director extends Model implements HasMedia
         return $listAvatars;
     }
 
+    public function getCountryAttribute()
+    {
+        return $this->country()->first();
+    }
+
+    public function getMovieJoinedAttribute()
+    {
+        return $this->movies()->count();
+    }
+
     public function registerMediaCollections(): void
     {
         $this->addMediaCollection('avatar')->singleFile();
@@ -58,8 +70,4 @@ class Director extends Model implements HasMedia
         return $this->belongsTo(Country::class);
     }
 
-    public function getCountryAttribute()
-    {
-        return $this->country()->first();
-    }
 }

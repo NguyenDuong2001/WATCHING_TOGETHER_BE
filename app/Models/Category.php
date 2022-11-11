@@ -18,6 +18,15 @@ class Category extends Model
         'pivot'
     ];
 
+    protected $appends = [
+        'movie_count'
+    ];
+
+    public function getMovieCountAttribute()
+    {
+        return $this->movies()->count();
+    }
+
     public function movies()
     {
         return $this->belongsToMany(Movie::class);

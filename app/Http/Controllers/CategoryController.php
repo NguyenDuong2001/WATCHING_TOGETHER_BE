@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
@@ -157,23 +158,30 @@ class CategoryController extends Controller
      * @param  \App\Models\Category  $category
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Request $request, Category $category)
+    public function destroy(Request $request)
     {
         try {
-            $this->authorize('delete', $category);
+            $validator = Validator::make($request->all(), [
+                'ids' => 'required|array',
+                'ids.*' => 'numeric|exists:categories,id',
+            ]);
 
-            if (!$request->input('ids') ||
-                !is_array($request->input('ids')) ||
-                empty($request->input('ids')))
-            {
+            if ($validator->fails()) {
                 return response()->json([
-                    'message' => 'Not found category',
+                    'status_code' => 500,
+                    'message' => 'Data Invalid',
+                    'errors' => $validator->errors(),
                 ], 500);
             }
 
-            Category::findOrFail($request->input('ids'))->each(fn($category) => $category->delete());
+            $delete_fail = collect();
+            Category::findOrFail($request->input('ids'))->each(fn($category) =>
+                Auth::user()->can('delete', $category) ? $category->delete() : $delete_fail->push($category)
+            );
+
             return response()->json([
                 'message' => 'Delete successfully!',
+                'delete_fail' => $delete_fail
             ]);
         }catch (\Exception $exception){
             return response()->json([

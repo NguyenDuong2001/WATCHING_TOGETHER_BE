@@ -9,10 +9,10 @@ use BenSampo\Enum\Enum;
  * @method static static OptionTwo()
  * @method static static OptionThree()
  */
-final class ActivityType extends Enum
+final class ReviewStatus extends Enum
 {
-    const Rate = 'Rate';
-    const Comment = 'Comment';
-    const Reply = 'Reply';
-    const Review = 'Review';
+    const Pending = 'Pending';
+    const Canceled = "Canceled";
+    const Published = "Published";
+    const Archived = "Archived";
 }

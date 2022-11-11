@@ -78,11 +78,11 @@ class ActorPolicy
      */
     public function delete(User $user, Actor $actor)
     {
-        if ($user->role->name === RoleType::SuperAdmin || $user->role->name === RoleType::Admin) {
-            return true;
+        if (($user->role->name !== RoleType::SuperAdmin && $user->role->name !== RoleType::Admin) || $actor->movies()->count() > 0) {
+            return false;
         }
 
-        return false;
+        return true;
     }
 
     /**

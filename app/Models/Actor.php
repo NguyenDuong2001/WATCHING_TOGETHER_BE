@@ -22,11 +22,13 @@ class Actor extends Model implements HasMedia
     protected $hidden=[
         'media',
         'pivot',
+        'country_id'
     ];
 
     protected $appends = [
         'avatar',
-        'country'
+        'country',
+        'movie_joined'
     ];
 
     public function getAvatarAttribute()
@@ -46,22 +48,27 @@ class Actor extends Model implements HasMedia
         return $listAvatars;
     }
 
+    public function getCountryAttribute()
+    {
+        return $this->country()->first();
+    }
+
+    public function getMovieJoinedAttribute()
+    {
+        return $this->movies()->count();
+    }
+
     public function movies()
     {
         return $this->belongsToMany(Movie::class);
-    }
-
-    public function registerMediaCollections(): void
-    {
-        $this->addMediaCollection('avatar')->singleFile();
     }
 
     public function country() {
         return $this->belongsTo(Country::class);
     }
 
-    public function getCountryAttribute()
+    public function registerMediaCollections(): void
     {
-        return $this->country()->first();
+        $this->addMediaCollection('avatar')->singleFile();
     }
 }

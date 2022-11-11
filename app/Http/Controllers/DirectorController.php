@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Director;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
@@ -178,23 +179,30 @@ class DirectorController extends Controller
      * @param  \App\Models\Director  $director
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Request $request, Director $director)
+    public function destroy(Request $request)
     {
         try {
-            $this->authorize('delete', $director);
+            $validator = Validator::make($request->all(), [
+                'ids' => 'required|array',
+                'ids.*' => 'numeric|exists:directors,id',
+            ]);
 
-            if (!$request->input('ids') ||
-                !is_array($request->input('ids')) ||
-                empty($request->input('ids')))
-            {
+            if ($validator->fails()) {
                 return response()->json([
-                    'message' => 'Not found director',
+                    'status_code' => 500,
+                    'message' => 'Data Invalid',
+                    'errors' => $validator->errors(),
                 ], 500);
             }
 
-            Director::findOrFail($request->input('ids'))->each(fn($director) => $director->delete());
+            $delete_fail = collect();
+            Director::findOrFail($request->input('ids'))->each(fn($director) =>
+                Auth::user()->can('delete', $director) ?
+                $director->delete() : $delete_fail->push($director)
+            );
             return response()->json([
                 'message' => 'Delete successfully!',
+                'delete_fail' => $delete_fail
             ], 200);
         }catch (\Exception $exception){
             return response()->json([

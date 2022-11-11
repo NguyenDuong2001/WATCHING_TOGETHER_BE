@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Facades\Auth;
 
 class Comment extends Model
 {
@@ -18,7 +19,8 @@ class Comment extends Model
     protected $appends = [
         'user',
 //        'movie',
-        'replies'
+//        'replies',
+        'is_author'
     ];
 
     public function getRepliesAttribute()
@@ -34,6 +36,11 @@ class Comment extends Model
     public function getMovieAttribute()
     {
         return $this->movie()->first();
+    }
+
+    public function getIsAuthorAttribute()
+    {
+        return $this->user_id == Auth::user()?->id;
     }
 
     public function user() {
