@@ -150,7 +150,7 @@ class Movie extends Model implements HasMedia
         if (!Auth::user() || !$this->rates()->where('user_id', Auth::user()->id)->exists()) {
             return null;
         }
-        return $this->rates()->where('user_id', Auth::user()->id)->first()->rate;
+        return $this->rates()->where('user_id', Auth::user()->id)->firstOrFail()->rate;
     }
 
     public function getCountryAttribute()
@@ -208,12 +208,12 @@ class Movie extends Model implements HasMedia
 
     public function rates()
     {
-        return $this->hasMany(Rate::class);
+        return $this->morphMany(Rate::class, 'rateable', 'object_type', 'object_id');
     }
 
     public function comments()
     {
-        return $this->hasMany(Comment::class);
+        return $this->morphMany(Comment::class, 'commentable', 'object_type', 'object_id');
     }
 
     public function registerMediaCollections(): void

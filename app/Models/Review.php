@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
@@ -30,10 +31,24 @@ class Review extends Model implements HasMedia
     protected $appends = [
         'thumbnail',
         'author',
+        'IMDb',
+        'user_rated',
+        'total_rated',
+        'total_commented'
 //        'checker',
 //        'movie',
 //        'video',
     ];
+
+    public function rates()
+    {
+        return $this->morphMany(Rate::class, 'rateable', 'object_type', 'object_id');
+    }
+
+    public function comments()
+    {
+        return $this->morphMany(Comment::class, 'commentable', 'object_type', 'object_id');
+    }
 
     public function author()
     {
@@ -79,6 +94,14 @@ class Review extends Model implements HasMedia
         return $listVideos;
     }
 
+    public function getUserRatedAttribute()
+    {
+        if (!Auth::user() || !$this->rates()->where('user_id', Auth::user()->id)->exists()) {
+            return null;
+        }
+        return $this->rates()->where('user_id', Auth::user()->id)->firstOrFail()->rate;
+    }
+
     public function getThumbnailAttribute()
     {
         $listThumbnails = collect([]);
@@ -93,6 +116,27 @@ class Review extends Model implements HasMedia
         }
 
         return $listThumbnails;
+    }
+
+    public function getTotalRatedAttribute()
+    {
+        return $this->rates()->count();
+    }
+
+    public function getTotalCommentedAttribute()
+    {
+        return $this->comments()->count();
+    }
+
+    public function getIMDbAttribute(){
+        $rate = $this->rates()->get();
+        if (!$rate->count()){
+            return 0;
+        }
+
+        $sum = $this->rates()->sum('rate');
+
+        return $sum / $rate->count() * 2;
     }
 
     public function registerMediaCollections(): void

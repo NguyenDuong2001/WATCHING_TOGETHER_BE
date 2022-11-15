@@ -13,12 +13,18 @@ class Comment extends Model
     protected $fillable = [
         'content',
         'user_id',
-        'movie_id'
+        'object_id',
+        'object_type'
+    ];
+
+    protected $hidden = [
+        'user_id',
+        'object_id',
+        'object_type'
     ];
 
     protected $appends = [
         'user',
-//        'movie',
 //        'replies',
         'is_author'
     ];
@@ -47,8 +53,9 @@ class Comment extends Model
         return $this->belongsTo(User::class)->select('id','name', 'email');
     }
 
-    public function movie() {
-        return $this->belongsTo(Movie::class)->select('name', 'publication_time');
+    public function commentable()
+    {
+        return $this->morphTo(__FUNCTION__, 'object_type', 'object_id');
     }
 
     public function replies()

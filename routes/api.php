@@ -7,6 +7,7 @@ use App\Http\Controllers\MessageController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\RoomController;
 use App\Http\Middleware\Customer;
+use App\Models\Role;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\MovieController;
@@ -45,23 +46,28 @@ Route::get('/categories/{id}', [CategoryController::class, 'show'])->whereNumber
 Route::get('/countries', [CountryController::class, 'index']);
 Route::middleware('auth:sanctum')->get("/roles", function (){
     return response()->json([
-        'roles' => \App\Models\Role::all()
+        'roles' => Role::all()
     ], 200);
 });
 
 Route::get("/directors/{id}", [DirectorController::class, 'show'])->whereNumber('id');
 Route::get("/actors/{id}", [ActorController::class, 'show'])->whereNumber('id');
 Route::middleware(Customer::class)->get("/movie/{id}", [MovieController::class, 'show'])->whereNumber('id');
-Route::middleware(Customer::class)->get("/movie/{id}/comments", [CommentController::class, 'index'])->whereNumber('id');
+Route::middleware(Customer::class)->get("/movie/{id}/comments", [CommentController::class, 'index_movie'])->whereNumber('id');
+Route::middleware(Customer::class)->get("/review/{id}/comments", [CommentController::class, 'index_review'])->whereNumber('id');
 Route::get("/movie/{id}/similar", [MovieController::class, 'similar'])->whereNumber('id');
 Route::get("/movie/{id}/reviews", [MovieController::class, 'reviews'])->whereNumber('id');
 Route::get("/reviews", [ReviewController::class, 'index']);
 
-Route::middleware('auth:sanctum')->get("/user/{id}/reviews", [ReviewController::class, 'index_user'])->whereNumber('id');
+Route::middleware('auth:sanctum')->get("/user/reviews", [ReviewController::class, 'index_user']);
 Route::middleware('auth:sanctum')->post("/user/reviews", [ReviewController::class, 'store']);
 Route::middleware('auth:sanctum')->put("/user/reviews", [ReviewController::class, 'update']);
 Route::middleware('auth:sanctum')->put("/admin/reviews", [ReviewController::class, 'set_status']);
+Route::middleware('auth:sanctum')->get("/reviews/{id}/manage", [ReviewController::class, 'manage'])->whereNumber('id');
+Route::middleware('auth:sanctum')->get("/reviews/{id}", [ReviewController::class, 'show'])->whereNumber('id');
 Route::middleware('auth:sanctum')->get("/admin/reviews", [ReviewController::class, 'index_admin']);
+Route::middleware('auth:sanctum')->post("/review/rate", [ReviewController::class, 'rate']);
+Route::middleware('auth:sanctum')->post("/review/comment", [ReviewController::class, 'comment']);
 
 
 Route::middleware('auth:sanctum')->get("/users", [UserController::class, 'index']);
@@ -86,16 +92,18 @@ Route::middleware('auth:sanctum')->put("/admin/actors", [ActorController::class,
 Route::middleware('auth:sanctum')->delete("/admin/actors", [ActorController::class, 'destroy']);
 
 Route::middleware('auth:sanctum')->get("/admin/movies", [MovieController::class, 'index_admin']);
+Route::middleware('auth:sanctum')->get("/admin/movies/select", [MovieController::class, 'index_select']);
 Route::middleware('auth:sanctum')->get("/admin/movies/{id}", [MovieController::class, 'show_admin'])->whereNumber('id');
 Route::middleware('auth:sanctum')->post("/admin/movies", [MovieController::class, 'store']);
 Route::middleware('auth:sanctum')->put("/admin/movies", [MovieController::class, 'update']);
 Route::middleware('auth:sanctum')->put("/admin/movies/status", [MovieController::class, 'set_status']);
 Route::middleware('auth:sanctum')->delete("/admin/movies", [MovieController::class, 'destroy']);
 Route::middleware('auth:sanctum')->post("/movie/rate", [MovieController::class, 'rate']);
-Route::middleware('auth:sanctum')->post("/movie/comment", [CommentController::class, 'store']);
-Route::middleware('auth:sanctum')->put("/movie/comment", [CommentController::class, 'update']);
-Route::middleware('auth:sanctum')->delete("/movie/comment", [CommentController::class, 'destroy']);
-Route::middleware('auth:sanctum')->post("/comment/reply", [MovieController::class, 'reply']);
+Route::middleware('auth:sanctum')->post("/movie/comment", [MovieController::class, 'comment']);
+
+Route::middleware('auth:sanctum')->put("/comment", [CommentController::class, 'update']);
+Route::middleware('auth:sanctum')->delete("/comment", [CommentController::class, 'destroy']);
+//Route::middleware('auth:sanctum')->post("/comment/reply", [MovieController::class, 'reply']);
 
 Route::fallback(function(){
     return response()->json([

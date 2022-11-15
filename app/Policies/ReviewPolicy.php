@@ -36,6 +36,19 @@ class ReviewPolicy
     }
 
     /**
+     * Determine whether the user can view the model.
+     *
+     * @param  \App\Models\User  $user
+     * @param  \App\Models\Review  $review
+     * @return \Illuminate\Auth\Access\Response|bool
+     */
+    public function manage(User $user, Review $review)
+    {
+        return $user->role->name != RoleType::Customer ||
+            $review->author_id == $user->id;
+    }
+
+    /**
      * Determine whether the user can create models.
      *
      * @param  \App\Models\User  $user
@@ -96,6 +109,16 @@ class ReviewPolicy
         //
     }
 
+    public function rate(User $user, Review $movie)
+    {
+        return true;
+    }
+
+    public function comment(User $user, Review $movie)
+    {
+        return true;
+    }
+
     /**
      * Determine whether the user can permanently delete the model.
      *
@@ -103,13 +126,13 @@ class ReviewPolicy
      * @param  \App\Models\Review  $review
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function set_status(User $user, Review $review)
+    public function set_status(User $user, Review $review, $status)
     {
         //TODO: set lai tu published sang canceled
         return (
             $user->role->name === RoleType::SuperAdmin ||
             $user->role->name === RoleType::Checker
         ) && $review->status !== ReviewStatus::Canceled &&
-            $review->status !== ReviewStatus::Archived;
+            ( $review->status !== ReviewStatus::Archived || $status == ReviewStatus::Published );
     }
 }

@@ -17,8 +17,9 @@ return new class extends Migration
             $table->id();
             $table->integer('rate');
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->foreignId('movie_id')->constrained('movies')->onDelete('cascade');
-            $table->unique(['user_id', 'movie_id']);
+            $table->unsignedBigInteger('object_id');
+            $table->string('object_type');
+            $table->unique(['user_id', 'object_id', 'object_type']);
             $table->timestamps();
         });
     }

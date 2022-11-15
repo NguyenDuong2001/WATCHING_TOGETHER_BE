@@ -23,19 +23,31 @@ class MovieController extends Controller
     /**
      * Display a listing of the resource.
      * @param Request $request
-     * @return Response
+     * @return \Illuminate\Http\JsonResponse
      */
     public function index(Request $request, $option)
     {
         return response()->json([
             'movies' => Movie::options($option, $request->limit, $request->category, $request->country),
-        ], 200);
+        ]);
     }
 
     /**
      * Display a listing of the resource.
      * @param Request $request
-     * @return Response
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function index_select(Request $request)
+    {
+        return response()->json([
+            'movies' => Movie::select(['id', 'name'])->get()->each(fn($movie) => $movie->setAppends([])),
+        ]);
+    }
+
+    /**
+     * Display a listing of the resource.
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
      */
     public function similar(Request $request, $id)
     {
@@ -56,7 +68,7 @@ class MovieController extends Controller
     /**
      * Display a listing of the resource.
      * @param Request $request
-     * @return Response
+     * @return \Illuminate\Http\JsonResponse
      */
     public function index_admin(Request $request, Movie $movie)
     {
@@ -88,7 +100,7 @@ class MovieController extends Controller
      * Store a newly created resource in storage.
      *
      * @param Request $request
-     * @return Response
+     * @return \Illuminate\Http\JsonResponse
      */
     public function store(Request $request, Movie $movie)
     {
@@ -167,7 +179,6 @@ class MovieController extends Controller
                 'message' => 'Create movie successfully!',
             ]);
         }catch (\Exception $e){
-            dd($e);
             return response()->json([
                 'message' => 'Create movie fail'
             ],500);
@@ -180,7 +191,7 @@ class MovieController extends Controller
      * Display the specified resource.
      *
      * @param \App\Models\Movie $movie
-     * @return Response
+     * @return \Illuminate\Http\JsonResponse
      */
     public function show(Movie $movie, $id)
     {
@@ -199,7 +210,7 @@ class MovieController extends Controller
      * Display the specified resource.
      *
      * @param \App\Models\Movie $movie
-     * @return Response
+     * @return \Illuminate\Http\JsonResponse
      */
     public function show_admin(Movie $movie, $id)
     {
@@ -232,7 +243,7 @@ class MovieController extends Controller
      *
      * @param Request $request
      * @param \App\Models\Movie $movie
-     * @return Response
+     * @return \Illuminate\Http\JsonResponse
      */
     public function update(Request $request, Movie $movie)
     {
@@ -325,7 +336,7 @@ class MovieController extends Controller
      * Remove the specified resource from storage.
      *
      * @param \App\Models\Movie $movie
-     * @return Response
+     * @return \Illuminate\Http\JsonResponse
      */
     public function set_status(Request $request, Movie $movie)
     {
@@ -379,7 +390,7 @@ class MovieController extends Controller
      * Remove the specified resource from storage.
      *
      * @param \App\Models\Movie $movie
-     * @return Response
+     * @return \Illuminate\Http\JsonResponse
      */
     public function destroy(Request $request, Movie $movie)
     {
@@ -431,20 +442,21 @@ class MovieController extends Controller
             $movie = Movie::findOrFail($request->get('id'));
             $this->authorize('rate', $movie);
 
-            DB::transaction(function () use ($request)
+            DB::transaction(function () use ($request, $movie)
             {
                 Activity::create([
                     'user_id' => Auth::user()->id,
                     'object_id' => $request->get('id'),
                     'object_type' => Movie::class,
-                    'description' => 'User #' . Auth::user()->id . ' rated ' . $request->get('rate') . ' in movie #' . $request->get('id'),
+                    'description' => 'User #' . Auth::user()->id . ' rated ' . $request->get('rate') . ' in movie #' . $movie->id,
                     'content' => $request->get('rate'),
                     'type' => ActivityType::Rate,
                 ]);
 
                 Rate::updateOrCreate([
                     'user_id' => Auth::user()->id,
-                    'movie_id' => $request->get('id'),
+                    'object_id' => $movie->id,
+                    'object_type' => Movie::class,
                 ],[
                     'rate' => $request->get('rate'),
                 ]);
@@ -456,6 +468,60 @@ class MovieController extends Controller
         }catch (\Exception $e) {
             return response()->json([
                 'message' => 'Rate failed',
+            ], 500);
+        }
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function comment(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'id' => ['required', 'numeric', 'exists:movies,id'],
+            'content' => ['required', 'max:255'],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status_code' => 500,
+                'message' => 'Data Invalid',
+                'errors' => $validator->errors(),
+            ], 500);
+        }
+
+        try {
+            $movie = Movie::findOrFail($request->get('id'));
+            $this->authorize('comment', $movie);
+
+            DB::transaction(function () use ($request, $movie)
+            {
+                Activity::create([
+                    'user_id' => Auth::user()->id,
+                    'object_id' => $request->get('id'),
+                    'object_type' => Movie::class,
+                    'description' => 'User #' . Auth::user()->id . ' commented as "' . $request->get('content') . '" in movie #' . $movie->id,
+                    'content' => $request->get('content'),
+                    'type' => ActivityType::Comment,
+                ]);
+
+                Comment::create([
+                    'user_id' => Auth::user()->id,
+                    'object_id' => $movie->id,
+                    'object_type' => Movie::class,
+                    'content' => $request->get('content'),
+                ]);
+            });
+
+            return response()->json([
+                'message' => 'Comment successfully!',
+            ]);
+        }catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Comment failed',
             ], 500);
         }
     }

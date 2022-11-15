@@ -4,8 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Enums\ActivityType;
 use App\Enums\ReviewStatus;
+use App\Enums\RoleType;
 use App\Models\Activity;
+use App\Models\Comment;
 use App\Models\Movie;
+use App\Models\Rate;
 use App\Models\Review;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -17,7 +20,7 @@ class ReviewController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\JsonResponse
      */
     public function index(Request $request)
     {
@@ -25,14 +28,15 @@ class ReviewController extends Controller
         return response()->json([
             'reviews' => $reviews->append('video'),
             'last_page' => $reviews->lastPage(),
-            'current_page' => $reviews->currentPage()
+            'current_page' => $reviews->currentPage(),
+            'total_reviews' => $reviews->total()
         ]);
     }
 
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\JsonResponse
      */
     public function index_user(Request $request)
     {
@@ -60,7 +64,7 @@ class ReviewController extends Controller
 
         $reviews = Review::where('author_id', Auth::user()->id)
             ->when($request->query('status'), fn ($q) => $q->where('status', $request->query('status')))
-            ->orderBy('created_at', $request->query('sortBy') === 'last' ? 'asc' : 'desc')
+            ->orderBy('updated_at', $request->query('sortBy') === 'last' ? 'asc' : 'desc')
             ->paginate($request->query('limit') ?: 5);
 
         return response()->json([
@@ -73,7 +77,7 @@ class ReviewController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\JsonResponse
      */
     public function index_admin(Request $request, Review $review)
     {
@@ -102,11 +106,11 @@ class ReviewController extends Controller
         }
 
         $reviews = Review::when($request->query('status'), fn ($q) => $q->where('status', $request->query('status')))
-            ->orderBy('created_at', $request->query('sortBy') === 'last' ? 'asc' : 'desc')
+            ->orderBy('updated_at', $request->query('sortBy') === 'last' ? 'asc' : 'desc')
             ->paginate($request->query('limit') ?: 5);
 
         return response()->json([
-            'reviews' => $reviews->items(),
+            'reviews' => $reviews->append('checker'),
             'last_page' => $reviews->lastPage(),
             'current_page' => $reviews->currentPage()
         ]);
@@ -126,7 +130,7 @@ class ReviewController extends Controller
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\JsonResponse
      */
     public function store(Request $request, Review $review)
     {
@@ -187,11 +191,45 @@ class ReviewController extends Controller
      * Display the specified resource.
      *
      * @param  \App\Models\Review  $review
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function show(Review $review)
+    public function show(Review $review, $id)
     {
-        //
+        try {
+            $review = Review::where('status', ReviewStatus::Published)->where('id', $id)->firstOrFail();
+
+            return response()->json([
+                'review' => $review->append('video')
+            ]);
+        }catch (\Exception $e)
+        {
+            return response()->json([
+                'message' => 'Mot found review'
+            ]);
+        }
+    }
+
+    /**
+     * Display the specified resource.
+     *
+     * @param  \App\Models\Review  $review
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function manage(Review $review, $id)
+    {
+        try {
+            $review = Review::findOrFail($id);
+            $this->authorize('manage', $review);
+
+            return response()->json([
+                'review' => Auth::user()->role != RoleType::Customer ? $review->append('video', 'checker') : $review->append('video')
+            ]);
+        }catch (\Exception $e)
+        {
+            return response()->json([
+                'message' => 'Mot found review'
+            ]);
+        }
     }
 
     /**
@@ -210,7 +248,7 @@ class ReviewController extends Controller
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  \App\Models\Review  $review
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\JsonResponse
      */
     public function update(Request $request, Review $review)
     {
@@ -307,8 +345,9 @@ class ReviewController extends Controller
 
         try {
             $review = Review::findOrFail($request->get('id'));
-            $this->authorize('set_status', $review);
+            $this->authorize('set_status', [$review, $request->get('status')]);
             $review->status = $request->get('status');
+            $review->checker_id = Auth::user()->id;
             $review->save();
 
             return response()->json([
@@ -317,6 +356,109 @@ class ReviewController extends Controller
         }catch (\Exception $exception) {
             return response()->json([
                 'message' => 'Set status review fail',
+            ], 500);
+        }
+    }
+
+    public function rate(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'id' => ['required', 'numeric', 'exists:reviews,id'],
+            'rate' => ['required','numeric', 'max:5', 'min:1'],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status_code' => 500,
+                'message' => 'Data Invalid',
+                'errors' => $validator->errors(),
+            ], 500);
+        }
+
+        try {
+            $review = Review::where('status', ReviewStatus::Published)->where('id', $request->get('id'))->firstOrFail();
+            $this->authorize('rate', $review);
+
+            DB::transaction(function () use ($request, $review)
+            {
+                Activity::create([
+                    'user_id' => Auth::user()->id,
+                    'object_id' => $request->get('id'),
+                    'object_type' => Review::class,
+                    'description' => 'User #' . Auth::user()->id . ' rated ' . $request->get('rate') . ' in review #' . $review->id,
+                    'content' => $request->get('rate'),
+                    'type' => ActivityType::Rate,
+                ]);
+
+                Rate::updateOrCreate([
+                    'user_id' => Auth::user()->id,
+                    'object_id' => $review->id,
+                    'object_type' => Review::class,
+                ],[
+                    'rate' => $request->get('rate'),
+                ]);
+            });
+
+            return response()->json([
+                'message' => 'Rate successfully!',
+            ]);
+        }catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Rate failed',
+            ], 500);
+        }
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function comment(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'id' => ['required', 'numeric', 'exists:reviews,id'],
+            'content' => ['required', 'max:255'],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status_code' => 500,
+                'message' => 'Data Invalid',
+                'errors' => $validator->errors(),
+            ], 500);
+        }
+
+        try {
+            $review = Review::where('status', ReviewStatus::Published)->where('id', $request->get('id'))->firstOrFail();
+            $this->authorize('comment', $review);
+
+            DB::transaction(function () use ($request, $review)
+            {
+                Activity::create([
+                    'user_id' => Auth::user()->id,
+                    'object_id' => $review->id,
+                    'object_type' => Review::class,
+                    'description' => 'User #' . Auth::user()->id . ' commented as "' . $request->get('content') . '" in review #' . $review->id,
+                    'content' => $request->get('content'),
+                    'type' => ActivityType::Comment,
+                ]);
+
+                Comment::create([
+                    'user_id' => Auth::user()->id,
+                    'object_id' => $review->id,
+                    'object_type' => Review::class,
+                    'content' => $request->get('content'),
+                ]);
+            });
+
+            return response()->json([
+                'message' => 'Comment successfully!',
+            ]);
+        }catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Comment failed',
             ], 500);
         }
     }
