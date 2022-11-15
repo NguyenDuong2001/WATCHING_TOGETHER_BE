@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Models\Room;
 use App\Models\User;
 use App\Http\Controllers\Controller;
 
@@ -41,6 +42,8 @@ class RegisterController extends Controller
             ]);
 
 //           $user->addMediaFromUrl("https://robohash.org/".rand(1,1000))->toMediaCollection('avatar');
+
+            Room::create(['user_id' => $user->id]);
 
             return response()->json([
             'token' => 'Bearer '.$user->createToken('authToken')->plainTextToken,

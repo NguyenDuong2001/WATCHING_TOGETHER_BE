@@ -1,6 +1,9 @@
 <?php
 
+use App\Models\Room;
 use Illuminate\Support\Facades\Broadcast;
+use Illuminate\Support\Facades\Auth;
+use App\Enums\RoleType;
 
 /*
 |--------------------------------------------------------------------------
@@ -15,4 +18,10 @@ use Illuminate\Support\Facades\Broadcast;
 
 Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
     return (int) $user->id === (int) $id;
+});
+
+Broadcast::channel('room.{id}', function ($user, $id) {
+    return Auth::user()->role->name === RoleType::SuperAdmin ||
+        Auth::user()->role->name === RoleType::Admin ||
+        Auth::user()->id == Room::findOrFail($id)->user_id;
 });
