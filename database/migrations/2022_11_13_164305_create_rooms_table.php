@@ -17,6 +17,8 @@ return new class extends Migration
             $table->id();
             $table->string('name')->nullable();
             $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->boolean('user_seen')->default(true);
+            $table->boolean('admin_seen')->default(true);
             $table->timestamps();
             $table->unique('user_id');
         });

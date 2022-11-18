@@ -46,6 +46,7 @@ class Movie extends Model implements HasMedia
         'IMDb',
         'director',
         'actors',
+        'total_reviews'
 //        'video',
 //        'trailer',
 //        'user_rated'
@@ -186,6 +187,11 @@ class Movie extends Model implements HasMedia
         ];
     }
 
+    public function getTotalReviewsAttribute()
+    {
+        return $this->reviews()->count();
+    }
+
     public function actors()
     {
         return $this->belongsToMany(Actor::class);
@@ -204,6 +210,11 @@ class Movie extends Model implements HasMedia
     public function director()
     {
         return $this->belongsTo(Director::class);
+    }
+
+    public function reviews()
+    {
+        return $this->hasMany(Review::class);
     }
 
     public function rates()
@@ -259,7 +270,7 @@ class Movie extends Model implements HasMedia
             $most_view = $query->orderBy('view', 'desc')->first();
             $movies->push($most_view);
 
-            $most_publication_time = $query->whereNotIn('id', [$most_view->id])->orderBy('publication_time', 'desc')->first();
+            $most_publication_time = $query->whereNotIn('id', [$most_view->id])->orderBy('updated_at', 'desc')->first();
             $movies->push($most_publication_time);
 
             $movies->push($query->whereNotIn('id', [$most_view->id, $most_publication_time->id])->get()->sortByDesc('IMDb')->first());

@@ -16,8 +16,6 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CountryController;
 use App\Http\Controllers\UserController;
-use App\Models\Movie;
-use App\Models\User;
 
 /*
 |--------------------------------------------------------------------------
@@ -57,7 +55,7 @@ Route::middleware(Customer::class)->get("/movie/{id}/comments", [CommentControll
 Route::middleware(Customer::class)->get("/review/{id}/comments", [CommentController::class, 'index_review'])->whereNumber('id');
 Route::get("/movie/{id}/similar", [MovieController::class, 'similar'])->whereNumber('id');
 Route::get("/movie/{id}/reviews", [MovieController::class, 'reviews'])->whereNumber('id');
-Route::get("/reviews", [ReviewController::class, 'index']);
+Route::middleware(Customer::class)->get("/reviews", [ReviewController::class, 'index']);
 
 Route::middleware('auth:sanctum')->get("/user/reviews", [ReviewController::class, 'index_user']);
 Route::middleware('auth:sanctum')->post("/user/reviews", [ReviewController::class, 'store']);
@@ -105,16 +103,16 @@ Route::middleware('auth:sanctum')->put("/comment", [CommentController::class, 'u
 Route::middleware('auth:sanctum')->delete("/comment", [CommentController::class, 'destroy']);
 //Route::middleware('auth:sanctum')->post("/comment/reply", [MovieController::class, 'reply']);
 
-Route::fallback(function(){
-    return response()->json([
+Route::fallback(fn() =>
+    response()->json([
         'message' => 'Page Not Found'
-    ], 404);
-});
+    ], 404));
 
 Route::middleware('auth:sanctum')->post("/message", [MessageController::class, 'store']);
 
-Route::middleware('auth:sanctum')->get("/rooms", [RoomController::class, 'index']);
+Route::middleware('auth:sanctum')->get("/admin/rooms", [RoomController::class, 'index']);
 Route::middleware('auth:sanctum')->get("/room/{id}/message", [RoomController::class, 'messages'])->whereNumber('id');
-
+Route::middleware('auth:sanctum')->get("/room/message", [RoomController::class, 'messages']);
+Route::middleware('auth:sanctum')->put("/room/seen/{id?}", [RoomController::class, 'seen'])->whereNumber('id');
 
 

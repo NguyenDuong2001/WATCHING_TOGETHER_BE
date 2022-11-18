@@ -19,12 +19,18 @@ class Room extends Model
     ];
 
     protected $appends = [
-       'message_end'
+       'message_end',
+        'user'
     ] ;
 
     public function getMessageEndAttribute()
     {
         return $this->messages()->latest()->first();
+    }
+
+    public function getUserAttribute()
+    {
+        return $this->user()->first();
     }
 
     public function messages()

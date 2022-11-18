@@ -64,6 +64,7 @@ class ReviewController extends Controller
 
         $reviews = Review::where('author_id', Auth::user()->id)
             ->when($request->query('status'), fn ($q) => $q->where('status', $request->query('status')))
+            ->when($request->query('search'), fn ($q) => $q->where('name','like', "%{$request->query('search')}%"))
             ->orderBy('updated_at', $request->query('sortBy') === 'last' ? 'asc' : 'desc')
             ->paginate($request->query('limit') ?: 5);
 
@@ -106,6 +107,7 @@ class ReviewController extends Controller
         }
 
         $reviews = Review::when($request->query('status'), fn ($q) => $q->where('status', $request->query('status')))
+            ->when($request->query('search'), fn ($q) => $q->where('name','like', "%{$request->query('search')}%"))
             ->orderBy('updated_at', $request->query('sortBy') === 'last' ? 'asc' : 'desc')
             ->paginate($request->query('limit') ?: 5);
 

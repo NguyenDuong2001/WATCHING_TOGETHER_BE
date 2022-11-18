@@ -34,9 +34,9 @@ class Review extends Model implements HasMedia
         'IMDb',
         'user_rated',
         'total_rated',
-        'total_commented'
+        'total_commented',
+        'movie',
 //        'checker',
-//        'movie',
 //        'video',
     ];
 
@@ -67,17 +67,17 @@ class Review extends Model implements HasMedia
 
     public function getMovieAttribute()
     {
-        return $this->movie()->first();
+        return $this->movie()->withoutGlobalScope('Published')->select(['id', 'name'])->first()?->setAppends([]);
     }
 
     public function getCheckerAttribute()
     {
-        return $this->checker()->first();
+        return $this->checker()->select(['id', 'name', 'email'])->first()?->setAppends([]);
     }
 
     public function getAuthorAttribute()
     {
-        return $this->author()->first();
+        return $this->author()->select(['id', 'name', 'email'])->first()?->setAppends(['avatar']);
     }
 
     public function getVideoAttribute()
@@ -85,7 +85,7 @@ class Review extends Model implements HasMedia
         $listVideos = collect([]);
 
         $videos = $this->getMedia('video');
-        if ($videos->count() > 0){
+        if ($videos->count() > 0) {
             foreach ($videos as $video){
                 $listVideos->push($video->getFullUrl());
             }

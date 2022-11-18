@@ -16,9 +16,11 @@ class Message extends Model
         'sender_id',
         'receiver_id',
         'room_id',
+        'user_seen',
+        'admin_seen'
     ];
 
-    protected $hidden= [
+    protected $hidden = [
         'room_id',
         'sender_id',
         'receiver_id'
@@ -42,6 +44,11 @@ class Message extends Model
 
     public function getIsAuthorAttribute()
     {
+        if (Auth::user()?->role->name != RoleType::Customer && $this->sender()->first()?->role->name != RoleType::Customer)
+        {
+            return true;
+        }
+
         return $this->sender()->first()?->id === Auth::user()?->id;
     }
 

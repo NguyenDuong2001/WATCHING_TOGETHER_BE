@@ -58,7 +58,7 @@ class User extends Authenticatable implements HasMedia
         $avatars = $this->getMedia('avatar');
 
         if ($avatars->count() <= 0){
-            return ['https://i.pravatar.cc/300?img='.rand(1, 70)];
+            return ['https://sbcf.fr/wp-content/uploads/2018/03/sbcf-default-avatar.png'];
         }
 
         foreach ($avatars as $avatar){

@@ -37,13 +37,6 @@ class UsersSeeder extends Seeder
             'country_id' => 1
         ]);
 
-        User::factory()->create([
-            'name' => 'Checker',
-            'email' => 'checker@gmail.com',
-            'role_id' => 3,
-            'country_id' => 1
-        ]);
-
         $users = User::factory()->count(10)->create();
         $users->each(fn ($user) => Room::create(['user_id' => $user->id]));
         // foreach ($users as $user){

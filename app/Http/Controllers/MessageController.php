@@ -36,7 +36,7 @@ class MessageController extends Controller
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Broadcasting\PendingBroadcast|\Illuminate\Http\JsonResponse
      */
     public function store(Request $request)
     {
@@ -58,6 +58,14 @@ class MessageController extends Controller
                 Auth::user()->id : $request->get('to'),
         ]);
 
+        if (Auth::user()->role->name === RoleType::Customer) {
+            $room->admin_seen = false;
+        } else {
+            $room->user_seen = false;
+        }
+
+        $room->save();
+
         $message = Message::create([
             'sender_id' => Auth::user()->id,
             'receiver_id' => Auth::user()->role->name === RoleType::Customer ?
@@ -66,12 +74,22 @@ class MessageController extends Controller
             'message' => $request->get('message')
         ]);
 
-        broadcast(new SendMessage($room->id, $request->get('message')))->toOthers();
+        broadcast(new SendMessage($room->id, [
+            'created_at' => $message->created_at,
+            'id' => $message->id,
+            'is_author' => false,
+            'sender' => $message->sender,
+            'receiver' => $message->receiver,
+            'updated_at' => $message->updated_at,
+            'message' => $message->message
+        ]))->toOthers();
 
         return response()->json([
             'message' => 'Send message successfully!',
             'data' => $message
         ]);
+
+
     }
 
     /**

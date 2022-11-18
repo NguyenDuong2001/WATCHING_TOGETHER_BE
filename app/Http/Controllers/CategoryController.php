@@ -20,18 +20,18 @@ class CategoryController extends Controller
         $search = Str::of($request->get('search'))->trim();
         if ($search != "") {
             return response()->json([
-                'categories' => Category::where('name', 'like', "%$search%")->paginate($request->get('limit') ?: 5),
+                'categories' => Category::where('name', 'like', "%$search%")->orderBy('updated_at', 'desc')->paginate($request->get('limit') ?: 5),
             ],200);
         }
 
         if ($request->get('limit') != "") {
             return response()->json([
-                'categories' => Category::paginate($request->get('limit')),
+                'categories' => Category::orderBy('updated_at', 'desc')->paginate($request->get('limit')),
             ],200);
         }
 
         return response()->json([
-            'categories' => Category::all(),
+            'categories' => Category::orderBy('updated_at', 'desc')->get(),
         ],200);
     }
 

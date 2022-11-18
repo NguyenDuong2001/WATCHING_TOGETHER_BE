@@ -20,7 +20,7 @@ class ReviewPolicy
      */
     public function viewAny(User $user)
     {
-        return $user->role->name === RoleType::SuperAdmin || $user->role->name === RoleType::Checker;
+        return $user->role->name != RoleType::Customer;
     }
 
     /**
@@ -128,11 +128,8 @@ class ReviewPolicy
      */
     public function set_status(User $user, Review $review, $status)
     {
-        //TODO: set lai tu published sang canceled
-        return (
-            $user->role->name === RoleType::SuperAdmin ||
-            $user->role->name === RoleType::Checker
-        ) && $review->status !== ReviewStatus::Canceled &&
+        return $user->role->name != RoleType::Customer
+         && $review->status !== ReviewStatus::Canceled &&
             ( $review->status !== ReviewStatus::Archived || $status == ReviewStatus::Published );
     }
 }

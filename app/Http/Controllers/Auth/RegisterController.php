@@ -21,15 +21,15 @@ class RegisterController extends Controller
                 'fullName' => ['required'],
                 'address' => ['required','max:255'],
                 'password' => ['required', 'max:255', Password::min(8)],
-                'phone_number' => ['required', 'digits:10', 'unique:App\Models\User,phone_number'],
                 'email' => ['required', 'regex:/([a-zA-Z0-9]+)?([a-zA-Z0-9]+)\@([a-zA-Z0-9]+)([\.])([a-zA-Z0-9\.]+)/u', 'unique:App\Models\User,email'],
+                'phone_number' => ['required', 'digits:10', 'unique:App\Models\User,phone_number'],
             ]);
             if ($validator->fails()) {
                 return response()->json([
                     'status_code' => 500,
                     'message' => 'Data Invalid',
                     'errors' => $validator->errors(),
-                ]);
+                ], 500);
             }
 
             $user = User::create([

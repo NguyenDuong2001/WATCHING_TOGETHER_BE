@@ -77,12 +77,19 @@ class MovieController extends Controller
         $search = Str::of($request->get('search'))->trim();
         if ($search != "") {
             return response()->json([
-                'movies' => Movie::withoutGlobalScope('Published')->select('id', 'name', 'publication_time', 'movie_duration', 'director_id', 'status')->where('name', 'like', "%$search%")->paginate($request->get('limit') ?: 5),
+                'movies' => Movie::withoutGlobalScope('Published')
+                    ->select('id', 'name', 'publication_time', 'movie_duration', 'director_id', 'status')
+                    ->where('name', 'like', "%$search%")
+                    ->orderBy('updated_at', 'desc')
+                    ->paginate($request->get('limit') ?: 5),
             ]);
         }
 
         return response()->json([
-            'movies' => Movie::withoutGlobalScope('Published')->select('id', 'name', 'publication_time', 'movie_duration', 'director_id', 'status')->paginate($request->get('limit') ?: 5),
+            'movies' => Movie::withoutGlobalScope('Published')
+                ->select('id', 'name', 'publication_time', 'movie_duration', 'director_id', 'status')
+                ->orderBy('updated_at', 'desc')
+                ->paginate($request->get('limit') ?: 5),
         ]);
     }
 
@@ -247,8 +254,6 @@ class MovieController extends Controller
      */
     public function update(Request $request, Movie $movie)
     {
-        $this->authorize('update', $movie);
-
         $validator = Validator::make($request->all(), [
             'id' => ['required', 'numeric', 'exists:movies,id'],
             'name' => ['nullable', 'max:50', 'unique:movies,name,'.$request->input('id')],
@@ -283,6 +288,8 @@ class MovieController extends Controller
         try {
             DB::transaction(function () use ($request){
                 $movie = Movie::withoutGlobalScope('Published')->findOrFail($request->input('id'));
+                $this->authorize('update', $movie);
+
                 $movie->name = $request->input('name') ?: $movie->name;
                 $movie->description = $request->input('description') ?: $movie->description;
                 $movie->company = $request->input('company') ?: $movie->company;
@@ -341,8 +348,6 @@ class MovieController extends Controller
     public function set_status(Request $request, Movie $movie)
     {
         try {
-            $this->authorize('update', $movie);
-
             $validator = Validator::make($request->all(), [
                 'ids' => ['required', 'array'],
                 'ids.*' => 'numeric|exists:movies,id',
@@ -395,8 +400,6 @@ class MovieController extends Controller
     public function destroy(Request $request, Movie $movie)
     {
         try {
-            $this->authorize('delete', $movie);
-
             $validator = Validator::make($request->all(), [
                 'ids' => 'required|array',
                 'ids.*' => 'numeric|exists:movies,id',
@@ -409,16 +412,22 @@ class MovieController extends Controller
                     'errors' => $validator->errors(),
                 ], 500);
             }
-
-            Movie::withoutGlobalScope('Published')->findOrFail($request->input('ids'))->each(fn($movie) => $movie->delete());
+            DB::transaction(function () use($request) {
+                Movie::withoutGlobalScope('Published')->findOrFail($request->input('ids'))->each(function ($movie) use ($request) {
+                    if (!$request->user()->can('delete', $movie)) {
+                        throw new \Exception('Delete fail');
+                    }
+                        $movie->delete();
+                });
+            });
 
             return response()->json([
                 'message' => 'Delete successfully!',
             ]);
         }catch (\Exception $exception){
             return response()->json([
-                'message' => 'Not found movie',
-                'error' => $exception
+                'message' => 'Delete fail because it has already been reviewed',
+                'errors' => $exception
             ], 500);
         }
     }

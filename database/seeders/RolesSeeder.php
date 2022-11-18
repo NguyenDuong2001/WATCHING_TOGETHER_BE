@@ -26,10 +26,6 @@ class RolesSeeder extends Seeder
                 'description' => 'This person can post the movie on the website'
             ],
             [
-                'name' => RoleType::Checker,
-                'description' => 'This person can browse movies so customers can watch'
-            ],
-            [
                 'name' => RoleType::Customer,
                 'description' => 'This person is a customer using and experiencing the website'
             ]

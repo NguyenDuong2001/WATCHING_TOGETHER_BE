@@ -13,6 +13,5 @@ final class RoleType extends Enum
 {
     const SuperAdmin = 'Super Admin';
     const Admin = 'Admin';
-    const Checker = 'Checker';
     const Customer = 'Customer';
 }

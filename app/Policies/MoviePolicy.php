@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Enums\MovieStatus;
 use App\Enums\RoleType;
 use App\Models\User;
 use App\Models\Movie;
@@ -66,7 +67,7 @@ class MoviePolicy
      */
     public function update(User $user, Movie $movie)
     {
-        if ($user->role->name === RoleType::SuperAdmin || $user->role->name === RoleType::Admin) {
+        if ($user->role->name != RoleType::Customer && $movie->status != MovieStatus::Archived) {
             return true;
         }
 
@@ -82,7 +83,7 @@ class MoviePolicy
      */
     public function delete(User $user, Movie $movie)
     {
-        if ($user->role->name === RoleType::SuperAdmin || $user->role->name === RoleType::Admin) {
+        if ($user->role->name != RoleType::Customer && $movie->total_reviews == 0) {
             return true;
         }
 
@@ -122,4 +123,16 @@ class MoviePolicy
     {
         return true;
     }
+
+//    /**
+//     * Determine whether the user can permanently delete the model.
+//     *
+//     * @param  \App\Models\User  $user
+//     * @param  \App\Models\Review  $review
+//     * @return \Illuminate\Auth\Access\Response|bool
+//     */
+//    public function set_status(User $user, Movie $movie, $status)
+//    {
+//        return $user->role->name != RoleType::Customer;
+//    }
 }

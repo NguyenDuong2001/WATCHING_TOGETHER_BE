@@ -28,11 +28,14 @@ class LoginController extends Controller
 
 
             if (!Auth::attempt([
-                $request->login_from => $request->email_or_phone_number, 
+                $request->login_from => $request->email_or_phone_number,
                 'password'=> $request->password
                 ])) {
                 return response()->json([
-                    'message' => 'Email or password is incorrect'
+                    'message' => 'Email or password is incorrect',
+                    'errors' => [
+                        'error' => ['Email or password is incorrect']
+                    ]
                 ], 500);
             }
 
@@ -44,13 +47,16 @@ class LoginController extends Controller
 
             $user->tokens()->delete();
             $tokenResult = $user->createToken('authToken')->plainTextToken;
-            
+
             return response()->json([
                 'token' => 'Bearer '.$tokenResult,
             ],200);
         } catch (\Exception $error) {
             return response()->json([
                 'message' => 'Email or password is incorrect',
+                'errors' => [
+                    'error' => ['Email or password is incorrect']
+                ]
             ], 500);
         }
     }

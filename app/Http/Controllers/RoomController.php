@@ -17,21 +17,28 @@ class RoomController extends Controller
      */
     public function index(Request $request)
     {
-        if (Auth::user()->role === RoleType::Customer)
+        try {
+            if (Auth::user()->role === RoleType::Customer)
+            {
+                return response()->json([
+                    'room' => Room::where('user_id', Auth::user()->id)->firstOrFail()
+                ]);
+            }
+
+            return response()->json([
+                'rooms' => Room::when($request->get('search'), function ($query) use ($request) {
+                    $users = User::where('name', 'like', "%{$request->get('search')}%")->get();
+                    $query->whereBelongsTo($users);
+                })->get()->sortBy(
+                    fn ($room) => [$room['message_end']?->created_at, $room['created_at'], $room['id']]
+                ,SORT_REGULAR,  true)->values()
+            ]);
+        } catch (\Exception $e)
         {
             return response()->json([
-                'room' => Room::where('user_id', Auth::user()->id)->first()
+                'rooms' => []
             ]);
         }
-
-        return response()->json([
-            'rooms' => Room::when($request->get('search'), function ($query) use ($request) {
-                $users = User::where('name', 'like', "%{$request->get('search')}%")->get();
-                $query->whereBelongsTo($users);
-            })->get()->sortBy(
-                fn ($room) => [$room['message_end']?->created_at, $room['created_at'], $room['id']]
-            ,SORT_REGULAR,  true)->values()
-        ]);
     }
 
     /**
@@ -100,23 +107,52 @@ class RoomController extends Controller
         //
     }
 
-    public function messages(Request $request, $id)
+    public function messages(Request $request, $id = null)
     {
         try {
-            $room = Room::findOrFail($id);
+            if ($id) {
+                $room = Room::findOrFail($id);
+            }
+            else {
+                $room = Room::where('user_id', Auth::user()->id)->firstOrFail();
+            }
             $this->authorize('view', $room);
 
             return response()->json([
                 'messages' => $room->messages()
                     ->orderBy('created_at', 'desc')
                     ->orderBy('id', 'desc')
-                    ->paginate($request->query('limit') ?: 10)
+                    ->paginate($request->query('limit') ?: 10),
+                'room_id' => $room->id
             ]);
-        }catch (\Exception $e)
+        } catch (\Exception $e)
         {
             return response()->json([
                 'message' => 'Not found room'
+            ], 500);
+        }
+    }
+
+    public function seen(Request $request, $id = null) {
+        try {
+            if ($id && Auth::user()->role != RoleType::Customer) {
+                $room = Room::findOrFail($id);
+                $room->admin_seen = true;
+            } else {
+                $room = Room::where('user_id', Auth::user()->id)->firstOrFail();
+                $room->user_seen = true;
+            }
+
+            $room->save();
+
+            return response()->json([
+                'message' => 'Seen successfully!'
             ]);
+        } catch (\Exception $e)
+        {
+            return response()->json([
+                'message' => 'Not found room'
+            ], 500);
         }
     }
 }
