@@ -18,7 +18,7 @@ class RoomController extends Controller
     public function index(Request $request)
     {
         try {
-            if (Auth::user()->role === RoleType::Customer)
+            if (Auth::user()->role->name === RoleType::Customer)
             {
                 return response()->json([
                     'room' => Room::where('user_id', Auth::user()->id)->firstOrFail()
