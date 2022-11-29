@@ -115,8 +115,8 @@ class MovieController extends Controller
 
         $validator = Validator::make($request->all(), [
             'name' => ['required', 'max:50', 'unique:movies', 'min:2'],
-            'description' => ['nullable', 'max:255'],
-            'company' => ['nullable', 'max:50'],
+            'description' => ['nullable'],
+            'company' => ['nullable', 'max:255'],
             'url_video' => ['nullable', 'url'],
             'limit_age' => ['nullable', 'numeric', 'min:1', 'max:99'],
             'country_id' => ['exists:countries,id', 'nullable'],
@@ -257,8 +257,8 @@ class MovieController extends Controller
         $validator = Validator::make($request->all(), [
             'id' => ['required', 'numeric', 'exists:movies,id'],
             'name' => ['nullable', 'max:50', 'unique:movies,name,'.$request->input('id')],
-            'description' => ['nullable', 'max:255'],
-            'company' => ['nullable', 'max:50'],
+            'description' => ['nullable'],
+            'company' => ['nullable', 'max:255'],
             'url_video' => ['nullable', 'url'],
             'limit_age' => ['nullable', 'numeric', 'min:1', 'max:99'],
             'country_id' => ['exists:countries,id', 'nullable'],
