@@ -22,18 +22,18 @@ class ActorController extends Controller
         $search = Str::of($request->get('search'))->trim();
         if ($search != "") {
             return response()->json([
-                'actors' => Actor::where('name', 'like', "%$search%")->paginate($request->get('limit') ?: 5),
+                'actors' => Actor::where('name', 'like', "%$search%")->orderBy('created_at', 'desc')->paginate($request->get('limit') ?: 5),
             ],200);
         }
 
         if ($request->get('limit') != "") {
             return response()->json([
-                'actors' => Actor::paginate($request->get('limit')),
+                'actors' => Actor::orderBy('created_at', 'desc')->paginate($request->get('limit')),
             ],200);
         }
 
         return response()->json([
-            'actors' => Actor::all()
+            'actors' => Actor::orderBy('created_at', 'desc')->get()
         ]);
     }
 

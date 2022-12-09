@@ -27,12 +27,12 @@ class UserController extends Controller
         $search = Str::of($request->get('search'))->trim();
         if ($search != "") {
             return response()->json([
-                'users' => User::where('name', 'like', "%$search%")->paginate($request->get('limit') ?: 5),
+                'users' => User::where('name', 'like', "%$search%")->orderBy('created_at', 'desc')->paginate($request->get('limit') ?: 5),
             ],200);
         }
 
         return response()->json([
-            'users' => User::paginate($request->get('limit') ?: 5)
+            'users' => User::orderBy('created_at', 'desc')->paginate($request->get('limit') ?: 5)
         ], 200);
     }
 
